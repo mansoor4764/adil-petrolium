@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { exportDaily, exportMonthly, exportYearly } from '../../api/reportApi';
+import { toInputDatePK } from '../../utils/pkFormat';
 import { SectionHeader, Section } from '../../components/ui/Section';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -160,14 +161,14 @@ export default function ExportCenter() {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
 
-  const [date, setDate] = useState(currentDate.toISOString().split('T')[0]);
+  const [date, setDate] = useState(toInputDatePK());
   const [month, setMonth] = useState(currentMonth);
   const [year, setYear] = useState(currentYear);
   const [yearOnly, setYearOnly] = useState(currentYear);
   const [loading, setLoading] = useState({});
   const [errors, setErrors] = useState({});
 
-  const todayStr = useMemo(() => currentDate.toISOString().split('T')[0], []);
+  const todayStr = useMemo(() => toInputDatePK(), []);
   const availableYears = useMemo(() => {
     const years = [];
     for (let y = 2023; y <= currentYear; y++) {
