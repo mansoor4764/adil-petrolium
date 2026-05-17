@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Pagination } from '../../components/common/Pagination';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import { usePagination } from '../../hooks/usePagination';
+import { toInputDatePK } from '../../utils/pkFormat';
 
 const ACTION_VARIANTS = {
   TRANSACTION_CREATED: 'primary',
@@ -169,7 +170,7 @@ export default function AuditLogs() {
   const [draftFilters, setDraftFilters] = useState({ action: '', startDate: '', endDate: '', actor: '' });
   const [filters, setFilters] = useState({ action: '', startDate: '', endDate: '', actor: '' });
 
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = useMemo(() => toInputDatePK(new Date()), []);
 
   const loadLogs = useCallback(async () => {
     setLoading(true);

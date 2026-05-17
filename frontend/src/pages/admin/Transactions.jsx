@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { getCustomers } from '../../api/customerApi';
 import { downloadAdminStatementExcel } from '../../api/reportApi';
 import { getTransactions, voidTransaction } from '../../api/transactionApi';
+import { generateCustomerStatementPdf } from '../../utils/pdf/customerStatementPdf';
 import { TransactionForm } from '../../components/admin/TransactionForm';
 import { Pagination } from '../../components/common/Pagination';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -19,6 +20,7 @@ import {
   formatDateTimePK,
   formatNumberPK,
   formatRatePK,
+  toInputDatePK,
   PK_TIMEZONE,
 } from '../../utils/pkFormat';
 
@@ -170,7 +172,7 @@ export default function Transactions() {
   const [voidReason, setVoidReason] = useState('');
   const [voidLoading, setVoidLoading] = useState(false);
 
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = useMemo(() => toInputDatePK(new Date()), []);
   const { page, limit, goTo } = usePagination(20);
 
   const customerIdFromUrl = searchParams.get('customerId');
@@ -413,6 +415,23 @@ export default function Transactions() {
     }
   }, [isStatementMode, selectedCustomer, filters.startDate, filters.endDate]);
 
+  const handleDownloadPdf = useCallback(() => {
+    if (!isStatementMode || !selectedCustomer) return;
+    try {
+      generateCustomerStatementPdf({
+        customer: selectedCustomer,
+        statementRows,
+        summary: {},
+        filters,
+        totals,
+        company: { name: 'Adil Petroleum' },
+      });
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      setError('Failed to generate PDF');
+    }
+  }, [isStatementMode, selectedCustomer, statementRows, filters, totals]);
+
   return (
     <div>
     <div className="animate-fadeIn report-page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
@@ -424,9 +443,14 @@ export default function Transactions() {
         action={
           <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
             {isStatementMode ? (
-              <Button variant="secondary" onClick={handleShareStatement}>
-                ⬇ Download Statement
-              </Button>
+              <>
+                <Button variant="secondary" onClick={handleShareStatement}>
+                  ⬇ Download Excel
+                </Button>
+                <Button variant="secondary" onClick={handleDownloadPdf}>
+                  ⬇ Download PDF
+                </Button>
+              </>
             ) : null}
             <Button onClick={() => setShowCreate(true)}>Receive Payment</Button>
           </div>

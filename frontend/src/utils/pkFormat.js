@@ -64,7 +64,14 @@ export const formatRatePK = (value) =>
 
 export const formatDatePK = (value) => {
   if (!value) return '—';
-  return new Date(value).toLocaleDateString('en-PK', {
+  const str = String(value);
+  // Date-only strings (YYYY-MM-DD) are parsed as UTC midnight by the spec,
+  // which shifts the displayed date back by 1 day in UTC+ timezones like PKT.
+  // Appending T00:00:00 forces local-time parsing so the date stays correct.
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(str)
+    ? new Date(`${str}T00:00:00`)
+    : new Date(str);
+  return date.toLocaleDateString('en-PK', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',

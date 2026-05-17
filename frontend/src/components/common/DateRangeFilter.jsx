@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '../ui/Button';
+import { toInputDatePK } from '../../utils/pkFormat';
 
 const PRESETS = [
   { label: 'Today',      days: 0  },
@@ -14,9 +15,9 @@ export const DateRangeFilter = ({ onFilter }) => {
   const [end,   setEnd]   = useState('');
   const [active, setActive] = useState(null);
 
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = useMemo(() => toInputDatePK(new Date()), []);
 
-  const toISO = (d) => d.toISOString().split('T')[0];
+  const toISO = (d) => toInputDatePK(d);
 
   const applyPreset = (preset) => {
     setActive(preset.label);

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { downloadMyStatement } from '../../api/customerApi';
+import { toInputDatePK } from '../../utils/pkFormat';
 
 export const StatementDownload = ({ customerCode }) => {
   const [loading, setLoading] = useState(false);
@@ -8,7 +9,7 @@ export const StatementDownload = ({ customerCode }) => {
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
 
-  const todayStr = React.useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = React.useMemo(() => toInputDatePK(new Date()), []);
 
   const downloadExcel = async () => {
     setLoading(true); setError('');
