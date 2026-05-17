@@ -723,7 +723,17 @@ input, textarea, select {
 .financial-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
+}
+
+.financial-table--customers {
+  table-layout: auto;
+  width: 100%;
+}
+
+.financial-table--customers colgroup col:nth-child(3) {
+  width: auto;
+  flex: 1;
 }
 
 .financial-table th {

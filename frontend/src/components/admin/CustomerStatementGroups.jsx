@@ -148,15 +148,15 @@ const StatementBlock = ({ group }) => (
         }}
       >
         <colgroup>
-          <col style={{ width: '11%' }} />
-          <col style={{ width: '14%' }} />
-          <col style={{ width: '9%' }} />
-          <col style={{ width: '9%' }} />
+          <col style={{ width: '15%' }} />
+          <col style={{ width: '15%' }} />
           <col style={{ width: '8%' }} />
           <col style={{ width: '8%' }} />
+          <col style={{ width: '7%' }} />
+          <col style={{ width: '7%' }} />
           <col style={{ width: '10%' }} />
           <col style={{ width: '10%' }} />
-          <col style={{ width: '21%' }} />
+          <col style={{ width: '20%' }} />
         </colgroup>
 
         <thead>
@@ -185,7 +185,7 @@ const StatementBlock = ({ group }) => (
               }}
             >
               <td style={cellStyle}>
-                <div style={{ fontWeight: 600, ...ellipsisStyle }}>{row.date}</div>
+                <div style={{ fontWeight: 600, wordBreak: 'break-word', overflow: 'visible', whiteSpace: 'normal' }}>{row.date}</div>
               </td>
               <td style={cellStyle}>
                 <div style={{ fontWeight: 600, ...ellipsisStyle }}>

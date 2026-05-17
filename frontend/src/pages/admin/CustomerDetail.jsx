@@ -16,7 +16,7 @@ export default function CustomerDetail() {
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState('');
-	const [form, setForm] = useState({ phone: '', address: '', vehicleInfo: '', creditLimit: '', notes: '', isActive: true });
+	const [form, setForm] = useState({ phone: '', address: '', creditLimit: '', notes: '', isActive: true });
 
 	useEffect(() => {
 		const load = async () => {
@@ -29,7 +29,6 @@ export default function CustomerDetail() {
 				setForm({
 					phone: data.phone || '',
 					address: data.address || '',
-					vehicleInfo: data.vehicleInfo || '',
 					creditLimit: data.creditLimit ?? 0,
 					notes: data.notes || '',
 					isActive: Boolean(data.isActive),
@@ -46,7 +45,7 @@ export default function CustomerDetail() {
 
 	const dirty = useMemo(() => {
 		if (!profile) return false;
-		return ['phone', 'address', 'vehicleInfo', 'creditLimit', 'notes', 'isActive'].some((key) => {
+		return ['phone', 'address', 'creditLimit', 'notes', 'isActive'].some((key) => {
 			const current = key === 'creditLimit' ? String(form[key] ?? '') : String(form[key] ?? '');
 			const original = key === 'creditLimit' ? String(profile[key] ?? '') : String(profile[key] ?? '');
 			return current !== original;
@@ -61,7 +60,6 @@ export default function CustomerDetail() {
 			const payload = {
 				phone: form.phone,
 				address: form.address,
-				vehicleInfo: form.vehicleInfo,
 				creditLimit: form.creditLimit === '' ? 0 : Number(form.creditLimit),
 				notes: form.notes,
 				isActive: form.isActive,
@@ -124,22 +122,25 @@ export default function CustomerDetail() {
 
 				<div className="form-grid-2">
 					<Input label="Phone" value={form.phone} onChange={(e) => setForm((current) => ({ ...current, phone: e.target.value }))} />
-					<Input label="Credit Limit" type="number" step="0.01" value={form.creditLimit} onChange={(e) => setForm((current) => ({ ...current, creditLimit: e.target.value }))} />
+					<Input label="Credit Limit" type="text" inputMode="decimal" value={form.creditLimit} onChange={(e) => {
+						const value = e.target.value;
+						// Allow empty, numbers, and single decimal point
+						if (value === '' || /^\d*\.?\d*$/.test(value)) {
+							setForm((current) => ({ ...current, creditLimit: value }));
+						}
+					}} />
 				</div>
 
+<div className="form-grid-2">
 				<div className="form-field">
 					<label className="form-field__label">Address</label>
 					<textarea value={form.address} onChange={(e) => setForm((current) => ({ ...current, address: e.target.value }))} rows={3} style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: 'var(--color-surface)', color: 'var(--color-text)', minHeight: 92 }} />
 				</div>
 
 				<div className="form-field">
-					<label className="form-field__label">Vehicle Info</label>
-					<textarea value={form.vehicleInfo} onChange={(e) => setForm((current) => ({ ...current, vehicleInfo: e.target.value }))} rows={2} style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: 'var(--color-surface)', color: 'var(--color-text)', minHeight: 78 }} />
-				</div>
-
-				<div className="form-field">
 					<label className="form-field__label">Notes</label>
-					<textarea value={form.notes} onChange={(e) => setForm((current) => ({ ...current, notes: e.target.value }))} rows={4} style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: 'var(--color-surface)', color: 'var(--color-text)', minHeight: 112 }} />
+					<textarea value={form.notes} onChange={(e) => setForm((current) => ({ ...current, notes: e.target.value }))} rows={3} style={{ width: '100%', padding: 'var(--space-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: 'var(--color-surface)', color: 'var(--color-text)', minHeight: 92 }} />
+				</div>
 				</div>
 
 				<label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-sm)', paddingTop: 'var(--space-1)' }}>

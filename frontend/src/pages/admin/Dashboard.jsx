@@ -301,31 +301,6 @@ export default function AdminDashboard() {
             })}
           </p>
         </div>
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            background: 'color-mix(in oklch, var(--color-success) 10%, var(--color-surface))',
-            border: '1px solid color-mix(in oklch, var(--color-success) 22%, transparent)',
-            borderRadius: 'var(--radius-full)',
-            padding: '4px 12px',
-            fontSize: 'var(--text-xs)',
-            fontWeight: 600,
-            color: 'var(--color-success)',
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: 'var(--color-success)',
-            }}
-          />
-          Live
-        </div>
       </div>
 
       <div

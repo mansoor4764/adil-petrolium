@@ -84,6 +84,7 @@ export const TransactionForm = ({
   currentBalance = 0,
   customerName,
   customerCode,
+  customerIsActive,
   onSuccess,
   onCancel,
 }) => {
@@ -122,6 +123,10 @@ export const TransactionForm = ({
     const next = {};
 
     if (!customerId) next.customerId = 'Customer is required';
+
+    if (customerIsActive === false) {
+      next.customerId = 'This customer is inactive. Cannot record entries for inactive customers.';
+    }
 
     if (
       !form.paymentReceived ||
@@ -235,6 +240,24 @@ export const TransactionForm = ({
           </div>
         )}
 
+        {customerIsActive === false && (
+          <div style={{
+            marginBottom: 'var(--space-5)',
+            padding: 'var(--space-4)',
+            background: 'color-mix(in oklch, var(--color-error) 10%, var(--color-surface))',
+            border: '1px solid color-mix(in oklch, var(--color-error) 30%, transparent)',
+            borderRadius: 'var(--radius-lg)',
+            color: 'var(--color-error)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 600
+          }}>
+            <div style={{ marginBottom: 'var(--space-2)' }}>❌ This customer is inactive</div>
+            <div style={{ fontSize: 'var(--text-xs)', opacity: 0.9 }}>
+              Entries cannot be created for inactive customers. Please activate this customer first.
+            </div>
+          </div>
+        )}
+
         <div
           style={{
             display: 'grid',
@@ -334,7 +357,7 @@ export const TransactionForm = ({
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" loading={loading}>
+          <Button type="submit" loading={loading} disabled={customerIsActive === false}>
             Record Payment
           </Button>
         </div>

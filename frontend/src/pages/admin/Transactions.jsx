@@ -735,7 +735,7 @@ export default function Transactions() {
                       </td>
 
                       <td style={{ ...cellStyle, padding: 'var(--space-3) var(--space-4)', ...ellipsisStyle }}>
-                        {tx.vehicleNo || customer.vehicleInfo || selectedCustomer?.vehicleInfo || '—'}
+                        {escapeHtml(tx.vehicleNo || customer.vehicleInfo || selectedCustomer?.vehicleInfo || '—')}
                       </td>
 
                       <td style={{ ...numericCellStyle, padding: 'var(--space-3) var(--space-4)' }} className="is-numeric">
@@ -961,6 +961,7 @@ export default function Transactions() {
                 currentBalance={paymentCustomer?.currentBalance || closingBalance || 0}
                 customerName={paymentCustomer?.userId?.name}
                 customerCode={paymentCustomer?.customerCode}
+                customerIsActive={paymentCustomer?.isActive}
                 onSuccess={handleCreateSuccess}
                 onCancel={() => setShowCreate(false)}
               />

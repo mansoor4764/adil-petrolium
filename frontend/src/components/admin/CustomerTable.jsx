@@ -5,8 +5,8 @@ import { Button } from '../ui/Button';
 import { SkeletonTable } from '../ui/Skeleton';
 import { EmptyState } from '../ui/EmptyState';
 
-const TH = ({ children }) => (
-  <th>
+const TH = ({ children, align }) => (
+  <th style={align ? { textAlign: align } : {}}>
     {children}
   </th>
 );
@@ -32,15 +32,23 @@ export const CustomerTable = ({ data, loading, onAdd }) => {
   return (
     <div className="financial-table-shell">
       <div className="financial-table-wrap">
-      <table className="financial-table" style={{ minWidth: 680 }}>
+      <table className="financial-table financial-table--customers">
+        <colgroup>
+          <col style={{ width: '10%', minWidth: '90px' }} />
+          <col style={{ width: '16%', minWidth: '120px' }} />
+          <col style={{ width: '1fr', flex: 1 }} />
+          <col style={{ width: '18%', minWidth: '140px' }} />
+          <col style={{ width: '12%', minWidth: '100px' }} />
+          <col style={{ width: '20%', minWidth: '160px' }} />
+        </colgroup>
         <thead>
           <tr>
             <TH>Code</TH>
             <TH>Name</TH>
             <TH>Email</TH>
-            <TH>Balance</TH>
-            <TH>Status</TH>
-            <TH>Action</TH>
+            <TH align="right">Balance</TH>
+            <TH align="right">Status</TH>
+            <TH align="center">Action</TH>
           </tr>
         </thead>
         <tbody>
@@ -58,7 +66,7 @@ export const CustomerTable = ({ data, loading, onAdd }) => {
                 {c.userId?.name || '—'}
               </td>
 
-              <td className="is-muted">
+              <td className="is-muted" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', wordBreak: 'break-word' }}>
                 {c.userId?.email || '—'}
               </td>
 
@@ -66,7 +74,7 @@ export const CustomerTable = ({ data, loading, onAdd }) => {
                 PKR {Math.abs(c.currentBalance || 0).toLocaleString('en-PK', { minimumFractionDigits: 2 })}
               </td>
 
-              <td>
+              <td style={{ textAlign: 'right' }}>
                 <Badge variant={c.isActive ? 'success' : 'neutral'}>
                   {c.isActive ? 'Active' : 'Inactive'}
                 </Badge>
@@ -74,12 +82,12 @@ export const CustomerTable = ({ data, loading, onAdd }) => {
 
               <td
                 onClick={e => e.stopPropagation()}
-                style={{ padding: 0 }}
+                style={{ padding: 0, textAlign: 'center' }}
               >
                 <div style={{
                   display: 'flex',
                   gap: 'var(--space-2)',
-                  justifyContent: 'flex-end',
+                  justifyContent: 'center',
                   alignItems: 'center',
                   height: '100%',
                   padding: 'var(--space-2) var(--space-3)',
