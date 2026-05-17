@@ -53,7 +53,7 @@ export default function FuelEntry() {
     const load = async () => {
       setLoadingCustomers(true);
       try {
-        const res = await getCustomers({ limit: 100, sort: 'customerCode' });
+        const res = await getCustomers({ limit: 100, sort: 'customerCode', isActive: true });
         if (mounted) setCustomers(res.data?.data || []);
       } catch {
         if (mounted) setCustomers([]);
@@ -79,12 +79,26 @@ export default function FuelEntry() {
     customers.find((c) => c._id === form.customerId) || null
   , [customers, form.customerId]);
 
+  // Calculate what the new balance would be after this transaction
+  const projectedBalance = useMemo(() => {
+    if (!selectedCustomer) return 0;
+    return (selectedCustomer.currentBalance || 0) + amount;
+  }, [selectedCustomer, amount]);
+
+  // Check if transaction would exceed credit limit
+  const exceedsCreditLimit = useMemo(() => {
+    if (!selectedCustomer || selectedCustomer.creditLimit === 0 || selectedCustomer.creditLimit === null) return false;
+    return projectedBalance > selectedCustomer.creditLimit;
+  }, [selectedCustomer, projectedBalance]);
+
   const requiredComplete = useMemo(() => (
     Boolean(form.customerId)
+    && selectedCustomer?.isActive === true
     && Boolean(form.fuelQuantity) && Number(form.fuelQuantity) > 0
     && Boolean(form.rate) && Number(form.rate) > 0
     && Boolean(form.transactionDate)
-  ), [form.customerId, form.fuelQuantity, form.rate, form.transactionDate]);
+    && !exceedsCreditLimit
+  ), [form.customerId, selectedCustomer, form.fuelQuantity, form.rate, form.transactionDate, exceedsCreditLimit]);
 
   const setField = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -180,7 +194,7 @@ export default function FuelEntry() {
                 value={form.customerId}
                 onChange={(e) => setField('customerId', e.target.value)}
                 required
-                hint={loadingCustomers ? "Fetching customer list..." : "Choose a customer by name or code."}
+                hint={loadingCustomers ? "Fetching customer list..." : "Choose an active customer by name or code."}
               >
                 <option value="">Select customer</option>
                 {customers.map((customer) => (
@@ -194,40 +208,106 @@ export default function FuelEntry() {
 
           {/* Selected customer quick details */}
           {selectedCustomer && (
-            <div style={{ 
-              marginTop: 'var(--space-4)', 
-              padding: 'var(--space-4)', 
-              background: 'var(--color-surface-2)', 
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--color-border)',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-              gap: 'var(--space-4)'
-            }}>
-              <div>
-                <div style={SECTION_TITLE}>Full Name</div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', marginTop: 4 }}>{selectedCustomer.userId?.name || 'Unknown'}</div>
-              </div>
-              <div>
-                <div style={SECTION_TITLE}>Customer Code</div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', marginTop: 4 }}>{selectedCustomer.customerCode || '—'}</div>
-              </div>
-              <div>
-                <div style={SECTION_TITLE}>Phone Number</div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', marginTop: 4 }}>{selectedCustomer.phone || '—'}</div>
-              </div>
-              <div>
-                <div style={SECTION_TITLE}>Current Balance</div>
-                <div style={{ 
-                  fontWeight: 800, 
-                  fontSize: '1.1rem', 
-                  marginTop: 4,
-                  color: (selectedCustomer.currentBalance || 0) > 0 ? 'var(--color-error)' : 'var(--color-success)'
-                }}>
-                  {formatMoney(selectedCustomer.currentBalance)}
+            <>
+              <div style={{ 
+                marginTop: 'var(--space-4)', 
+                padding: 'var(--space-4)', 
+                background: 'var(--color-surface-2)', 
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--color-border)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gap: 'var(--space-4)'
+              }}>
+                <div>
+                  <div style={SECTION_TITLE}>Full Name</div>
+                  <div style={{ fontWeight: 700, fontSize: '1rem', marginTop: 4 }}>{selectedCustomer.userId?.name || 'Unknown'}</div>
+                </div>
+                <div>
+                  <div style={SECTION_TITLE}>Customer Code</div>
+                  <div style={{ fontWeight: 700, fontSize: '1rem', marginTop: 4 }}>{selectedCustomer.customerCode || '—'}</div>
+                </div>
+                <div>
+                  <div style={SECTION_TITLE}>Phone Number</div>
+                  <div style={{ fontWeight: 700, fontSize: '1rem', marginTop: 4 }}>{selectedCustomer.phone || '—'}</div>
+                </div>
+                <div>
+                  <div style={SECTION_TITLE}>Current Balance</div>
+                  <div style={{ 
+                    fontWeight: 800, 
+                    fontSize: '1.1rem', 
+                    marginTop: 4,
+                    color: (selectedCustomer.currentBalance || 0) > 0 ? 'var(--color-error)' : 'var(--color-success)'
+                  }}>
+                    {formatMoney(selectedCustomer.currentBalance)}
+                  </div>
+                </div>
+                <div>
+                  <div style={SECTION_TITLE}>Credit Limit</div>
+                  <div style={{ 
+                    fontWeight: 700, 
+                    fontSize: '1rem', 
+                    marginTop: 4,
+                    color: selectedCustomer.creditLimit === 0 || selectedCustomer.creditLimit === null ? 'var(--color-text-muted)' : 'var(--color-text)'
+                  }}>
+                    {selectedCustomer.creditLimit === 0 || selectedCustomer.creditLimit === null ? 'Unlimited' : formatMoney(selectedCustomer.creditLimit)}
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Inactive customer warning */}
+              {!selectedCustomer.isActive && (
+                <div style={{
+                  marginTop: 'var(--space-4)',
+                  padding: 'var(--space-4)',
+                  background: 'color-mix(in oklch, var(--color-error) 10%, var(--color-surface))',
+                  border: '1px solid color-mix(in oklch, var(--color-error) 30%, transparent)',
+                  borderRadius: 'var(--radius-lg)',
+                  color: 'var(--color-error)',
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 600
+                }}>
+                  <div style={{ marginBottom: 'var(--space-2)' }}>❌ This customer is inactive</div>
+                  <div style={{ fontSize: 'var(--text-xs)', opacity: 0.9 }}>
+                    Fuel entries cannot be created for inactive customers. Please activate this customer first.
+                  </div>
+                </div>
+              )}
+
+              {/* Credit limit warning */}
+              {selectedCustomer.creditLimit > 0 && amount > 0 && (
+                <div style={{
+                  marginTop: 'var(--space-4)',
+                  padding: 'var(--space-4)',
+                  background: exceedsCreditLimit 
+                    ? 'color-mix(in oklch, var(--color-error) 10%, var(--color-surface))'
+                    : 'color-mix(in oklch, var(--color-warning) 10%, var(--color-surface))',
+                  border: `1px solid color-mix(in oklch, ${exceedsCreditLimit ? 'var(--color-error)' : 'var(--color-warning)'} 30%, transparent)`,
+                  borderRadius: 'var(--radius-lg)',
+                  color: exceedsCreditLimit ? 'var(--color-error)' : 'var(--color-warning)',
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 600
+                }}>
+                  {exceedsCreditLimit ? (
+                    <>
+                      <div style={{ marginBottom: 'var(--space-2)' }}>❌ Credit limit would be exceeded</div>
+                      <div style={{ fontSize: 'var(--text-xs)', opacity: 0.9 }}>
+                        Limit: {formatMoney(selectedCustomer.creditLimit)} | 
+                        Projected Balance: {formatMoney(projectedBalance)}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ marginBottom: 'var(--space-2)' }}>✓ Within credit limit</div>
+                      <div style={{ fontSize: 'var(--text-xs)', opacity: 0.9 }}>
+                        Limit: {formatMoney(selectedCustomer.creditLimit)} | 
+                        Projected Balance: {formatMoney(projectedBalance)}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           <div className="form-grid-12" style={{ marginTop: 'var(--space-8)' }}>

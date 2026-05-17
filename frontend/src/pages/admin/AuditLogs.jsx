@@ -237,8 +237,8 @@ export default function AuditLogs() {
       </div>
 
       <div className="financial-detail-card">
-        <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 'var(--space-3)', alignItems: 'end' }}>
-          <div style={{ gridColumn: 'span 3' }}>
+        <div className="financial-detail-card__body" style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'flex-end', flexWrap: 'nowrap' }}>
+          <div style={{ flex: '0 0 auto', minWidth: 200 }}>
             <Field label="Action">
               <select
                 value={draftFilters.action}
@@ -254,16 +254,16 @@ export default function AuditLogs() {
             </Field>
           </div>
 
-          <div style={{ gridColumn: 'span 3' }}>
+          <div style={{ flex: '0 0 auto', minWidth: 220 }}>
             <Input
               label="Actor"
               value={draftFilters.actor}
               onChange={(e) => setDraftFilters((current) => ({ ...current, actor: e.target.value }))}
-              hint="User ID, email, or leave blank"
+              placeholder="User ID, email, or leave blank"
             />
           </div>
 
-          <div style={{ gridColumn: 'span 2' }}>
+          <div style={{ flex: '0 0 auto', minWidth: 160, marginLeft: 'var(--space-3)' }}>
             <Input
               label="From"
               type="date"
@@ -273,7 +273,7 @@ export default function AuditLogs() {
             />
           </div>
 
-          <div style={{ gridColumn: 'span 2' }}>
+          <div style={{ flex: '0 0 auto', minWidth: 160 }}>
             <Input
               label="To"
               type="date"
@@ -283,7 +283,9 @@ export default function AuditLogs() {
             />
           </div>
 
-          <div style={{ gridColumn: 'span 2', display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1' }} />
+
+          <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <Button onClick={applyFilters}>Apply</Button>
             <Button variant="secondary" onClick={resetFilters}>Reset</Button>
           </div>

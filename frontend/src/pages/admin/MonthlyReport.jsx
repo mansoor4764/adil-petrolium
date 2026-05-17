@@ -36,6 +36,20 @@ export default function MonthlyReport() {
 
   const availableYears = useMemo(() => [2023, 2024, 2025, 2026], []);
 
+  const availableMonths = useMemo(() => {
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    // If selected year is in the future, no months available
+    if (year > currentYear) return [];
+    
+    // If selected year is in the past, all months available
+    if (year < currentYear) return MONTHS.map((label, index) => ({ label, value: index + 1 }));
+    
+    // If selected year is current, only show months up to current month
+    return MONTHS.slice(0, currentMonth).map((label, index) => ({ label, value: index + 1 }));
+  }, [year, currentDate]);
+
   const loadMonthly = useCallback(async (targetYear = year, targetMonth = month) => {
     setLoading(true);
     setError('');
@@ -79,6 +93,22 @@ export default function MonthlyReport() {
   const handleReload = async () => {
     setReloading(true);
     await loadMonthly();
+  };
+
+  const handleYearChange = (newYear) => {
+    setYear(newYear);
+    
+    // If current month is not available in the new year, adjust it to the last available month
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    if (newYear > currentYear) {
+      // No months available, set to 1
+      setMonth(1);
+    } else if (newYear === currentYear && month > currentMonth) {
+      // Adjust to current month if past month was selected
+      setMonth(currentMonth);
+    }
   };
 
   const summary = useMemo(() => transactions.reduce((acc, tx) => {
@@ -145,13 +175,13 @@ export default function MonthlyReport() {
         <div className="report-filter">
           <span className="report-filter__label">Month</span>
           <select className="report-filter__control" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-            {MONTHS.map((label, index) => <option key={label} value={index + 1}>{label}</option>)}
+            {availableMonths.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </div>
 
         <div className="report-filter">
           <span className="report-filter__label">Year</span>
-          <select className="report-filter__control" value={year} onChange={(e) => setYear(Number(e.target.value))}>
+          <select className="report-filter__control" value={year} onChange={(e) => handleYearChange(Number(e.target.value))}>
             {availableYears.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
         </div>

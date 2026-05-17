@@ -961,6 +961,7 @@ export default function Transactions() {
                 currentBalance={paymentCustomer?.currentBalance || closingBalance || 0}
                 customerName={paymentCustomer?.userId?.name}
                 customerCode={paymentCustomer?.customerCode}
+                customerIsActive={paymentCustomer?.isActive}
                 onSuccess={handleCreateSuccess}
                 onCancel={() => setShowCreate(false)}
               />

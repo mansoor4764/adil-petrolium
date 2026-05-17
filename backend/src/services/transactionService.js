@@ -110,6 +110,11 @@ const createTransaction = async ({
 
         if (!profile) throw new AppError('Customer not found', 404);
 
+        // Prevent all transaction types for inactive customers
+        if (!profile.isActive) {
+          throw new AppError('Cannot create entries for inactive customers. Please activate the customer first.', 400);
+        }
+
         const rawAmount =
           totalAmount !== undefined && totalAmount !== null && totalAmount !== ''
             ? totalAmount
@@ -131,6 +136,18 @@ const createTransaction = async ({
         previousBalance = normalizeMoney(profile.currentBalance || 0);
         paymentReceivedAmount = normalizeMoney(paymentReceived || 0);
         updatedBalance = normalizeMoney(previousBalance + finalAmount - paymentReceivedAmount);
+
+        // Credit limit validation for fuel sales
+        // If creditLimit is 0, no limit applies
+        // If creditLimit > 0, check if the new balance would exceed it
+        if (transactionType === 'fuel_sale' && profile.creditLimit > 0) {
+          if (updatedBalance > profile.creditLimit) {
+            throw new AppError(
+              `Credit limit exceeded. Current limit: PKR ${profile.creditLimit.toLocaleString('en-PK', { minimumFractionDigits: 2 })}. Would result in: PKR ${updatedBalance.toLocaleString('en-PK', { minimumFractionDigits: 2 })}`,
+              400
+            );
+          }
+        }
 
         const userRef = profile.userId ? (profile.userId._id || profile.userId) : undefined;
 
@@ -165,6 +182,11 @@ const createTransaction = async ({
         const profile = await CustomerProfile.findById(customerId).populate('userId', 'name email');
         if (!profile) throw new AppError('Customer not found', 404);
 
+        // Prevent all transaction types for inactive customers
+        if (!profile.isActive) {
+          throw new AppError('Cannot create entries for inactive customers. Please activate the customer first.', 400);
+        }
+
         const rawAmount =
           totalAmount !== undefined && totalAmount !== null && totalAmount !== ''
             ? totalAmount
@@ -186,6 +208,18 @@ const createTransaction = async ({
         previousBalance = normalizeMoney(profile.currentBalance || 0);
         paymentReceivedAmount = normalizeMoney(paymentReceived || 0);
         updatedBalance = normalizeMoney(previousBalance + finalAmount - paymentReceivedAmount);
+
+        // Credit limit validation for fuel sales
+        // If creditLimit is 0, no limit applies
+        // If creditLimit > 0, check if the new balance would exceed it
+        if (transactionType === 'fuel_sale' && profile.creditLimit > 0) {
+          if (updatedBalance > profile.creditLimit) {
+            throw new AppError(
+              `Credit limit exceeded. Current limit: PKR ${profile.creditLimit.toLocaleString('en-PK', { minimumFractionDigits: 2 })}. Would result in: PKR ${updatedBalance.toLocaleString('en-PK', { minimumFractionDigits: 2 })}`,
+              400
+            );
+          }
+        }
 
         const userRef = profile.userId ? (profile.userId._id || profile.userId) : undefined;
 

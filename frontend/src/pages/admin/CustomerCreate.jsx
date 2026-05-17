@@ -281,6 +281,7 @@ export default function CustomerCreate() {
               <Input
                 label="Email"
                 type="email"
+                autoComplete="off"
                 value={form.email}
                 onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))}
                 error={validationErrors.email}
@@ -292,6 +293,7 @@ export default function CustomerCreate() {
               <Input
                 label="Password"
                 type="password"
+                autoComplete="new-password"
                 value={form.password}
                 onChange={(e) => setForm((current) => ({ ...current, password: e.target.value }))}
                 error={validationErrors.password}
@@ -313,8 +315,12 @@ export default function CustomerCreate() {
             <div style={{ gridColumn: 'span 4' }}>
               <Input
                 label="Phone"
+                type="tel"
                 value={form.phone}
-                onChange={(e) => setForm((current) => ({ ...current, phone: e.target.value }))}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^\d]/g, '');
+                  setForm((current) => ({ ...current, phone: value }));
+                }}
                 error={validationErrors.phone}
                 required
                 hint="Used for customer login fallback"
