@@ -47,10 +47,10 @@ export const Select = React.forwardRef(({
   const currentLabel = selectedOption?.label || options[0]?.label || 'Select an option';
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
 
     const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-    const update = () => setIsMobile(mediaQuery.matches);
+    const update = () => setIsMobile(mediaQuery?.matches || false);
 
     update();
 

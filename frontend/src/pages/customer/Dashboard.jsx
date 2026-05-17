@@ -22,8 +22,9 @@ export default function CustomerDashboard() {
       .then((r) => setProfile(r.data.data))
       .catch(() => {});
 
-  const loadTxs = () => {
-    setLoading(true); setError('');
+  const loadTxs = (silent = false) => {
+    if (!silent) setLoading(true);
+    setError('');
     return getMyTransactions({ ...filter, page, limit })
       .then(r => { setTxs(r.data.data || []); setMeta(r.data.meta); })
       .catch(e => setError(e.response?.data?.message || 'Failed to load'))
@@ -31,24 +32,29 @@ export default function CustomerDashboard() {
       .then(() => loadProfile());
   };
 
+  const loadTxsRef = React.useRef(loadTxs);
+  useEffect(() => {
+    loadTxsRef.current = loadTxs;
+  });
+
   useEffect(() => {
     loadProfile();
   }, []);
 
-  useEffect(() => { loadTxs(); }, [filter, page, limit]);
+  useEffect(() => { loadTxsRef.current(false); }, [filter, page, limit]);
 
   // Fallback polling so the customer view still updates if SSE is blocked.
   useEffect(() => {
     const timer = setInterval(() => {
-      loadTxs();
-    }, 10000);
+      loadTxsRef.current(true);
+    }, 60000); // Increased polling interval to 60 seconds to reduce network spam
 
     return () => clearInterval(timer);
-  }, [filter, page, limit]);
+  }, []);
 
   // SSE: reload transactions when admin creates/voids a transaction for this customer
   useEffect(() => {
-    if (!profile || !profile._id) return undefined;
+    if (!profile?._id) return undefined;
     const url = `${API_BASE_URL.replace(/\/$/, '')}/events/transactions?customerId=${profile._id}`;
     let es;
     try {
@@ -57,21 +63,22 @@ export default function CustomerDashboard() {
       return undefined;
     }
 
-    const onCreated = () => { loadTxs(); };
-    const onVoided = () => { loadTxs(); };
+    const onEvent = () => { loadTxsRef.current(true); };
 
-    es.addEventListener('transaction.created', onCreated);
-    es.addEventListener('transaction.voided', onVoided);
-    es.onerror = () => { try { es.close(); } catch (e) {} };
+    es.addEventListener('transaction.created', onEvent);
+    es.addEventListener('transaction.voided', onEvent);
+    es.onerror = () => { 
+        // Do not close it immediately, let EventSource auto-reconnect natively
+    };
 
     return () => {
       try {
-        es.removeEventListener('transaction.created', onCreated);
-        es.removeEventListener('transaction.voided', onVoided);
+        es.removeEventListener('transaction.created', onEvent);
+        es.removeEventListener('transaction.voided', onEvent);
         es.close();
       } catch (e) {}
     };
-  }, [profile, filter, page, limit]);
+  }, [profile?._id]);
 
   return (
     <div className="animate-fadeIn" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>

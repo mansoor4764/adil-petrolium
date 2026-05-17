@@ -2,6 +2,19 @@
 
 const clientsByCustomer = new Map();
 
+// Send keep-alive pings to prevent idle connection drop (every 15 seconds)
+setInterval(() => {
+  clientsByCustomer.forEach((set) => {
+    for (const res of set) {
+      try {
+        res.write(':\n\n'); // Empty comment ping for SSE
+      } catch (err) {
+        // ignore per-client errors
+      }
+    }
+  });
+}, 15000);
+
 function addClient(customerId, res) {
   const key = String(customerId);
   if (!clientsByCustomer.has(key)) clientsByCustomer.set(key, new Set());

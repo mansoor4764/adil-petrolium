@@ -42,10 +42,10 @@ export const Input = React.forwardRef(({
   const active = focused;
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
 
     const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-    const update = () => setIsMobile(mediaQuery.matches);
+    const update = () => setIsMobile(mediaQuery?.matches || false);
 
     update();
 
@@ -54,8 +54,10 @@ export const Input = React.forwardRef(({
       return () => mediaQuery.removeEventListener('change', update);
     }
 
-    mediaQuery.addListener(update);
-    return () => mediaQuery.removeListener(update);
+    if (mediaQuery.addListener) {
+      mediaQuery.addListener(update);
+      return () => mediaQuery.removeListener(update);
+    }
   }, []);
 
   const borderColor = error
