@@ -6,6 +6,16 @@ const DailyRecord = require('../../src/models/DailyRecord');
 const { connectTestDB, clearDB, closeDB } = require('../helpers/setup');
 const { createAdmin, createCustomer } = require('../helpers/fixtures');
 
+// Helper: return today's date string in PKT (UTC+5).
+// The service's parsePkDate interprets the date string as a PKT calendar day,
+// so we must pass the PKT date — not the UTC date — to avoid the window
+// [PKT-day-start, PKT-day-end) missing transactions when UTC time is 19:00–23:59.
+const PK_OFFSET_MS = 5 * 60 * 60 * 1000;
+const pktDateStr = (offsetDays = 0) => {
+  const d = new Date(Date.now() + PK_OFFSET_MS + offsetDays * 24 * 60 * 60 * 1000);
+  return d.toISOString().split('T')[0];
+};
+
 describe('Daily Record Service Unit', function () {
   this.timeout(15000);
 
@@ -46,11 +56,7 @@ describe('Daily Record Service Unit', function () {
       createdBy: admin._id,
     });
 
-    // Get or create daily record for today
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-
-    const record = await dailyRecordService.getOrCreateDailyRecord(dateStr, admin._id);
+    const record = await dailyRecordService.getOrCreateDailyRecord(pktDateStr(), admin._id);
     
     expect(record).to.exist;
     expect(record).to.have.property('totalFuelSold');
@@ -83,10 +89,10 @@ describe('Daily Record Service Unit', function () {
       createdBy: admin._id,
     });
 
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-
-    const record = await dailyRecordService.getOrCreateDailyRecord(dateStr, admin._id);
+    // Use PKT date (UTC+5) to match the service's parsePkDate window.
+    // Using toISOString() (UTC) can place the current time outside the PKT
+    // day window when UTC time is between 19:00–23:59 UTC.
+    const record = await dailyRecordService.getOrCreateDailyRecord(pktDateStr(), admin._id);
 
     expect(record.totalFuelSold).to.be.greaterThan(0);
     expect(record.totalSalesAmount).to.be.greaterThan(0);
@@ -115,10 +121,7 @@ describe('Daily Record Service Unit', function () {
     tx.voidReason = 'Test void';
     await tx.save();
 
-    const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
-
-    const record = await dailyRecordService.getOrCreateDailyRecord(dateStr, admin._id);
+    const record = await dailyRecordService.getOrCreateDailyRecord(pktDateStr(), admin._id);
 
     // The record should exist but voided transaction should not be counted
     expect(record).to.exist;
@@ -134,12 +137,8 @@ describe('Daily Record Service Unit', function () {
   });
 
   it('should return zero values when no transactions', async () => {
-    const pastDate = new Date();
-    pastDate.setDate(pastDate.getDate() - 1);
-    const dateStr = pastDate.toISOString().split('T')[0];
-
-    // This date should have no transactions
-    const record = await dailyRecordService.getOrCreateDailyRecord(dateStr, admin._id);
+    // Use PKT yesterday — guaranteed no transactions were created for that date
+    const record = await dailyRecordService.getOrCreateDailyRecord(pktDateStr(-1), admin._id);
 
     expect(record.totalFuelSold).to.equal(0);
     expect(record.totalSalesAmount).to.equal(0);
