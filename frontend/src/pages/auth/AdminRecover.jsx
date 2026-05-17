@@ -11,7 +11,7 @@ export default function AdminRecover() {
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [newRecoveryKey, setNewRecoveryKey] = useState('');
+  const [newRecoveryKey] = useState('');
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {

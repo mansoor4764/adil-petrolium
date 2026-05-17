@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { formatCurrencyPK, formatDatePK, formatNumberPK, toInputDatePK } from '../pkFormat';
+import { formatCurrencyPK, toInputDatePK } from '../pkFormat';
 
 /**
  * Generate a professional customer account statement PDF
@@ -58,8 +58,6 @@ export const generateCustomerStatementPdf = ({
 
   // Formatters
   const formatMoney = (value) => formatCurrencyPK(Math.abs(Number(value) || 0));
-  
-  // Custom date formatter for PDF: "11th Aug, 25" format
   const formatDateCustom = (dateStr) => {
     if (!dateStr) return 'Beginning';
     const date = new Date(dateStr);
@@ -136,17 +134,6 @@ export const generateCustomerStatementPdf = ({
       const pageText = `Page ${i} of ${totalPages}`;
       pdf.text(pageText, pageWidth - margin - 30, pageHeight - margin - 2);
     }
-  };
-
-  // Helper: Format currency with color
-  const getCurrencyColor = (value) => {
-    const num = Number(value || 0);
-    if (num > 0) {
-      return colors.error; // Debit in red
-    } else if (num < 0) {
-      return colors.success; // Credit in green
-    }
-    return colors.primary;
   };
 
   // Helper: Escape HTML in text

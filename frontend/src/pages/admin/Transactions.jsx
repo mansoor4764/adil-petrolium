@@ -17,20 +17,10 @@ import { usePagination } from '../../hooks/usePagination';
 import {
   formatCurrencyPK,
   formatDatePK,
-  formatDateTimePK,
   formatNumberPK,
   formatRatePK,
   toInputDatePK,
-  PK_TIMEZONE,
 } from '../../utils/pkFormat';
-
-const TYPE_VARIANTS = {
-  fuel_sale: 'warning',
-  payment: 'success',
-  adjustment: 'primary',
-  credit_note: 'primary',
-  opening_balance: 'neutral',
-};
 
 const CARD = {
   background: 'var(--color-surface)',
@@ -89,14 +79,8 @@ const ellipsisStyle = {
 const formatMoney = formatCurrencyPK;
 const formatNumber = formatNumberPK;
 const formatRate = formatRatePK;
-const formatDateTime = formatDateTimePK;
 const formatDate = formatDatePK;
 const formatBalance = (value) => formatCurrencyPK(Math.abs(Number(value) || 0));
-
-const titleize = (value) =>
-  String(value || '')
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase());
 
 const escapeHtml = (value) =>
   String(value ?? '')
