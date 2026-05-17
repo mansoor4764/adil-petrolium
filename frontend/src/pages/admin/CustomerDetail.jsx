@@ -43,6 +43,8 @@ export default function CustomerDetail() {
 		load();
 	}, [id]);
 
+	const hasOutstandingBalance = Number(profile?.currentBalance || 0) > 0;
+
 	const dirty = useMemo(() => {
 		if (!profile) return false;
 		return ['phone', 'address', 'creditLimit', 'notes', 'isActive'].some((key) => {
@@ -112,6 +114,8 @@ export default function CustomerDetail() {
 				))}
 			</div>
 
+
+
 			<form onSubmit={handleSave} className="form-surface form-surface--padded form-section">
 				<div className="form-section__header">
 					<div>
@@ -143,8 +147,18 @@ export default function CustomerDetail() {
 				</div>
 				</div>
 
-				<label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-sm)', paddingTop: 'var(--space-1)' }}>
-					<input type="checkbox" checked={form.isActive} onChange={(e) => setForm((current) => ({ ...current, isActive: e.target.checked }))} />
+				<label style={{
+					display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+					fontSize: 'var(--text-sm)', paddingTop: 'var(--space-1)',
+					cursor: hasOutstandingBalance ? 'not-allowed' : 'pointer',
+					opacity: hasOutstandingBalance ? 0.55 : 1,
+				}}>
+					<input
+						type="checkbox"
+						checked={form.isActive}
+						disabled={hasOutstandingBalance}
+						onChange={(e) => setForm((current) => ({ ...current, isActive: e.target.checked }))}
+					/>
 					Active customer
 				</label>
 

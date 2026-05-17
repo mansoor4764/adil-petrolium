@@ -163,6 +163,35 @@ input, textarea, select {
   padding: var(--space-4);
 }
 
+@media (max-width: 880px) {
+  .admin-shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .admin-shell__main {
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .admin-shell__content {
+    overflow: visible;
+  }
+
+  .form-footer {
+    position: static;
+    backdrop-filter: none;
+  }
+
+  .ui-input {
+    min-height: 44px;
+    touch-action: manipulation;
+    -webkit-appearance: auto;
+    appearance: auto;
+  }
+}
+
 .page-shell {
   display: flex;
   flex-direction: column;
@@ -508,10 +537,13 @@ input, textarea, select {
 
 .report-export-card__controls {
   display: flex;
-  justify-content: space-between;
   align-items: end;
   gap: var(--space-4);
   flex-wrap: wrap;
+}
+
+.report-export-card__controls > button {
+  margin-left: auto;
 }
 
 .report-export-card__controlGroup {
@@ -556,7 +588,7 @@ input, textarea, select {
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-divider);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--space-4);
   background: var(--color-surface);
 }
@@ -568,7 +600,7 @@ input, textarea, select {
 
 .report-statement-card__metaRow {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-columns: 115px minmax(0, 1fr);
   gap: 6px;
 }
 
@@ -718,6 +750,12 @@ input, textarea, select {
 
 .financial-table-wrap {
   overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 .financial-table {
@@ -1155,7 +1193,7 @@ input, textarea, select {
 /* ─── Fade-in animation (used by pages) ─── */
 @keyframes fadeIn {                    /* ✅ added — powers animate-fadeIn */
   from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  to   { opacity: 1; transform: none;   }
 }
 .animate-fadeIn {
   animation: fadeIn 220ms ease forwards;

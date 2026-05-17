@@ -38,10 +38,18 @@ const StatusPill = ({ locked }) => (
 );
 
 const SummaryCard = ({ label, value, hint, accent }) => (
-  <div className="report-stat-card" style={{ '--card-accent': accent || 'var(--color-primary)' }}>
-    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)' }}>{label}</div>
-    <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-lg)', fontWeight: 700, color: accent || 'var(--color-text)', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-    {hint ? <div style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{hint}</div> : null}
+  <div style={{
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-xl)',
+    boxShadow: 'var(--shadow-sm)',
+    padding: 'var(--space-4)',
+    display: 'flex',
+    flexDirection: 'column',
+  }}>
+    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>{label}</div>
+    <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-xl)', fontWeight: 700, color: accent || 'var(--color-text)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{value}</div>
+    {hint ? <div style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', fontWeight: 500 }}>{hint}</div> : null}
   </div>
 );
 
@@ -260,7 +268,7 @@ export default function DailyRecord() {
           title="Daily Record"
           subtitle="Review and lock the daily summary for a specific date"
           action={
-            <div className="report-toolbar">
+            <div className="report-toolbar" style={{ alignItems: 'flex-end' }}>
             <div className="report-filter">
               <span className="report-filter__label">Record Date</span>
               <input

@@ -145,6 +145,7 @@ const StatementBlock = ({ group }) => (
           width: '100%',
           borderCollapse: 'collapse',
           tableLayout: 'fixed',
+          minWidth: '850px',
         }}
       >
         <colgroup>

@@ -10,6 +10,7 @@ import { SectionHeader } from '../../components/ui/Section';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
+import { Select } from '../../components/ui/Select';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import { usePagination } from '../../hooks/usePagination';
 import {
@@ -432,29 +433,26 @@ export default function Transactions() {
         }
       />
 
-          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 'var(--space-3)', alignItems: 'start' }}>
+          <div className="financial-detail-card__body form-grid-12" style={{ alignItems: 'end', paddingBottom: 'var(--space-4)' }}>
           <div style={{ gridColumn: 'span 4' }}>
-            <Field label="Customer">
-              <select
-                value={draftFilters.customerId}
-                onChange={(e) =>
-                  setDraftFilters((prev) => ({
-                    ...prev,
-                    customerId: e.target.value,
-                  }))
-                }
-                className="financial-filter-control"
-                style={{ height: '40px', minHeight: '40px' }}
-              >
-                <option value="">All Customers</option>
-                {customerLoading ? <option value="">Loading...</option> : null}
-                {customers.map((customer) => (
-                  <option key={customer.id || customer._id} value={customer.id || customer._id}>
-                    {customer.customerCode} · {customer.userId?.name || 'Unknown'}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <Select
+              label="Customer"
+              value={draftFilters.customerId}
+              onChange={(e) =>
+                setDraftFilters((prev) => ({
+                  ...prev,
+                  customerId: e.target.value,
+                }))
+              }
+            >
+              <option value="">All Customers</option>
+              {customerLoading ? <option value="">Loading...</option> : null}
+              {customers.map((customer) => (
+                <option key={customer.id || customer._id} value={customer.id || customer._id}>
+                  {customer.customerCode} · {customer.userId?.name || 'Unknown'}
+                </option>
+              ))}
+            </Select>
           </div>
 
           <div style={{ gridColumn: 'span 3' }}>
@@ -494,10 +492,9 @@ export default function Transactions() {
               gridColumn: 'span 2',
               display: 'flex',
               gap: 'var(--space-2)',
-              justifyContent: 'flex-end',
+              justifyContent: 'flex-start',
               flexWrap: 'wrap',
-              alignItems: 'flex-end',
-              paddingBottom: '3px',
+              paddingTop: 'var(--space-2)',
             }}
           >
             <Button onClick={applyFilters}>Apply</Button>
@@ -510,8 +507,8 @@ export default function Transactions() {
 
       {isStatementMode && selectedCustomer ? (
         <div className="financial-detail-card" style={{ marginTop: 'var(--space-6)' }}>
-          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-5)', borderBottom: '1px solid var(--color-divider)', paddingBottom: 'var(--space-5)' }}>
-            <div style={{ borderRight: '1px solid var(--color-divider)', paddingRight: 'var(--space-5)' }}>
+          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-5)', borderBottom: '1px solid var(--color-divider)', paddingBottom: 'var(--space-5)' }}>
+            <div>
               <div style={SECTION_TITLE}>Account Holder</div>
               <div
                 style={{
@@ -550,7 +547,7 @@ export default function Transactions() {
             </div>
           </div>
 
-          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-5)', marginTop: 'var(--space-5)' }}>
+          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-5)', marginTop: 'var(--space-5)' }}>
             <div>
               <div style={SECTION_TITLE}>Statement Period</div>
               <div style={{ marginTop: 'var(--space-2)', fontWeight: 600, fontSize: 'var(--text-sm)' }}>
@@ -659,7 +656,7 @@ export default function Transactions() {
           </div>
 
           <div className="financial-table-wrap">
-            <table className="financial-table" style={{ tableLayout: 'fixed' }}>
+            <table className="financial-table" style={{ tableLayout: 'fixed', minWidth: '850px' }}>
               <colgroup>
                 <col style={{ width: '13%' }} />
                 <col style={{ width: '16%' }} />
@@ -779,7 +776,7 @@ export default function Transactions() {
           </div>
 
           {isStatementMode ? (
-            <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-4)', borderTop: '1px solid var(--color-divider)', paddingTop: 'var(--space-4)' }}>
+            <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)', borderTop: '1px solid var(--color-divider)', paddingTop: 'var(--space-4)' }}>
               <div
                 style={{
                   border: '1px solid var(--color-border)',
