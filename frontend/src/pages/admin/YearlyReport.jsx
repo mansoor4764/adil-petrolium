@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getTransactions } from '../../api/transactionApi';
 import { Button } from '../../components/ui/Button';
+import { Select } from '../../components/ui/Select';
 import { CustomerStatementGroups, buildCustomerStatementGroups, filterCustomerStatementGroups } from '../../components/admin/CustomerStatementGroups';
 import { SectionHeader, Section } from '../../components/ui/Section';
 import { formatCurrencyPK, formatDateTimePK, formatNumberPK, formatCurrencyShortPK } from '../../utils/pkFormat';
@@ -9,6 +10,22 @@ const fmt = formatCurrencyShortPK;
 const fmtL = (v) => `${formatNumberPK(v, 0, 0)} L`;
 const fmtDT = formatDateTimePK;
 const formatNumber = formatNumberPK;
+
+const SummaryCard = ({ label, value, hint, accent }) => (
+  <div style={{
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-xl)',
+    boxShadow: 'var(--shadow-sm)',
+    padding: 'var(--space-4)',
+    display: 'flex',
+    flexDirection: 'column',
+  }}>
+    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>{label}</div>
+    <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-xl)', fontWeight: 700, color: accent || 'var(--color-text)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{value}</div>
+    {hint ? <div style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', fontWeight: 500 }}>{hint}</div> : null}
+  </div>
+);
 
 export default function YearlyReport() {
   const currentYear = new Date().getFullYear();
@@ -71,29 +88,13 @@ export default function YearlyReport() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-4)', marginInline: 'var(--space-4)' }}>
-        <div className="report-stat-card" style={{ '--card-accent': 'var(--color-primary)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)' }}>Total Sale</div>
-          <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-primary)', fontVariantNumeric: 'tabular-nums' }}>{loading ? 'Loading…' : fmt(summary.sales)}</div>
-          <div style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Debit transactions in the selected year.</div>
-        </div>
-        <div className="report-stat-card" style={{ '--card-accent': 'var(--color-warning)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)' }}>Total Fuel Sold</div>
-          <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-warning)', fontVariantNumeric: 'tabular-nums' }}>{loading ? 'Loading…' : fmtL(summary.fuel)}</div>
-          <div style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Total litres sold across all entries.</div>
-        </div>
-        <div className="report-stat-card" style={{ '--card-accent': 'var(--color-success)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)' }}>Total Payments</div>
-          <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-success)', fontVariantNumeric: 'tabular-nums' }}>{loading ? 'Loading…' : fmt(summary.payments)}</div>
-          <div style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Credit transactions received.</div>
-        </div>
-        <div className="report-stat-card" style={{ '--card-accent': 'var(--color-warning)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)' }}>Remaining</div>
-          <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-warning)', fontVariantNumeric: 'tabular-nums' }}>{loading ? 'Loading…' : fmt(summary.sales - summary.payments)}</div>
-          <div style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Outstanding amount after payments.</div>
-        </div>
+        <SummaryCard label="Total Sale" value={loading ? 'Loading…' : fmt(summary.sales)} accent="var(--color-primary)" hint="Debit transactions in the selected year." />
+        <SummaryCard label="Total Fuel Sold" value={loading ? 'Loading…' : fmtL(summary.fuel)} accent="var(--color-warning)" hint="Total litres sold across all entries." />
+        <SummaryCard label="Total Payments" value={loading ? 'Loading…' : fmt(summary.payments)} accent="var(--color-success)" hint="Credit transactions received." />
+        <SummaryCard label="Remaining" value={loading ? 'Loading…' : fmt(summary.sales - summary.payments)} accent="var(--color-warning)" hint="Outstanding amount after payments." />
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', marginBottom: 'var(--space-4)', marginInline: 'var(--space-4)' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 'var(--space-4)', marginInline: 'var(--space-4)', marginTop: 'var(--space-6)' }}>
         <div className="report-filter" style={{ minWidth: 240, maxWidth: 400 }}>
           <span className="report-filter__label">Search</span>
           <input
@@ -105,16 +106,15 @@ export default function YearlyReport() {
           />
         </div>
 
-        <div style={{ flex: 1 }} />
+        <div style={{ flex: 1, minWidth: '40px' }} />
 
-        <div className="report-filter">
-          <span className="report-filter__label">Year</span>
-          <select className="report-filter__control" value={year} onChange={(e) => setYear(Number(e.target.value))}>
+        <div style={{ minWidth: '90px' }}>
+          <Select label="Year" value={year} onChange={(e) => setYear(Number(e.target.value))}>
             {[2023, 2024, 2025, 2026].map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
+          </Select>
         </div>
 
-        <Button onClick={loadYear}>Reload</Button>
+        <Button size="lg" onClick={loadYear}>Reload</Button>
       </div>
 
       <CustomerStatementGroups

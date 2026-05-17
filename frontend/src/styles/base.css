@@ -32,9 +32,11 @@ body {
   min-height: 100dvh;
 }
 
-/* Keep the page vertically scrollable while preventing horizontal overflow. */
+/* Keep the page vertically scrollable while preventing horizontal overflow.
+   NOTE: overflow-x must NOT be set on html/body — doing so clips native date
+   picker popups on mobile (they render as in-page overlays and get cut off).
+   Horizontal overflow is prevented at the layout level instead. */
 html, body {
-  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -152,6 +154,7 @@ input, textarea, select {
 
 .admin-shell__main {
   min-width: 0;
+  overflow-x: hidden; /* prevent wide tables from causing page-level horizontal scroll */
   display: flex;
   flex-direction: column;
 }
@@ -161,6 +164,35 @@ input, textarea, select {
   max-width: var(--content-wide);
   margin: 0 auto;
   padding: var(--space-4);
+}
+
+@media (max-width: 880px) {
+  .admin-shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .admin-shell__main {
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .admin-shell__content {
+    overflow: visible;
+  }
+
+  .form-footer {
+    position: static;
+    backdrop-filter: none;
+  }
+
+  .ui-input {
+    min-height: 44px;
+    touch-action: manipulation;
+    -webkit-appearance: auto;
+    appearance: auto;
+  }
 }
 
 .page-shell {
@@ -508,10 +540,13 @@ input, textarea, select {
 
 .report-export-card__controls {
   display: flex;
-  justify-content: space-between;
   align-items: end;
   gap: var(--space-4);
   flex-wrap: wrap;
+}
+
+.report-export-card__controls > button {
+  margin-left: auto;
 }
 
 .report-export-card__controlGroup {
@@ -556,7 +591,7 @@ input, textarea, select {
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-divider);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--space-4);
   background: var(--color-surface);
 }
@@ -568,7 +603,7 @@ input, textarea, select {
 
 .report-statement-card__metaRow {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-columns: 115px minmax(0, 1fr);
   gap: 6px;
 }
 
@@ -667,6 +702,7 @@ input, textarea, select {
 .financial-filter-control {
   min-height: 40px;
   height: 40px;
+  min-width: 130px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -718,6 +754,12 @@ input, textarea, select {
 
 .financial-table-wrap {
   overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 .financial-table {
@@ -1155,10 +1197,255 @@ input, textarea, select {
 /* ─── Fade-in animation (used by pages) ─── */
 @keyframes fadeIn {                    /* ✅ added — powers animate-fadeIn */
   from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  to   { opacity: 1; transform: none;   }
 }
 .animate-fadeIn {
   animation: fadeIn 220ms ease forwards;
+}
+
+/* ==========================================================================
+   Customer Layout Styles
+   ========================================================================== */
+.customer-header {
+  background: var(--color-sidebar-bg);
+  color: #fff;
+  display: flex;
+  flex-direction: row;   /* single row on desktop */
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--topbar-height);
+}
+
+.customer-header-top {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-4);
+  height: 100%;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  /* no border-bottom on desktop — everything is one row */
+}
+
+.customer-header-logo {
+  flex-shrink: 0;
+}
+
+.customer-header-brand {
+  font-weight: 700;
+  font-size: var(--text-base);
+  white-space: nowrap;
+}
+
+.customer-mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  padding: var(--space-1);
+}
+
+.customer-header-content {
+  display: flex;
+  align-items: center;
+  flex: 1;                /* fill remaining width */
+  padding: 0 var(--space-4);
+  gap: var(--space-4);
+  height: 100%;
+  /* no secondary background — same bar */
+}
+
+.customer-header-nav {
+  display: flex;
+  gap: var(--space-2);
+  flex: 1;
+  flex-wrap: wrap; /* Allows wrapping on smaller screens */
+}
+
+.customer-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  font-weight: 400;
+  color: var(--color-sidebar-text);
+  background: transparent;
+  transition: all var(--transition);
+}
+
+.customer-nav-link.active {
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-sidebar-active);
+}
+
+.customer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+
+.customer-user-name {
+  font-size: var(--text-sm);
+  opacity: 0.8;
+}
+
+.customer-signout-btn {
+  font-size: var(--text-xs);
+  color: var(--color-sidebar-text);
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.customer-signout-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.customer-mobile-backdrop {
+  display: none;
+}
+
+.customer-drawer-top {
+  display: none;
+}
+
+
+@media (max-width: 768px) {
+  .customer-header {
+    flex-direction: column;  /* stack back to two rows on mobile */
+    height: auto;
+  }
+
+  .customer-header-top {
+    width: 100%;
+    height: var(--topbar-height);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .customer-header-brand {
+    flex: 1;
+  }
+
+  .customer-mobile-menu-btn {
+    display: block;
+  }
+
+  .customer-mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 150;
+  }
+  
+  .customer-drawer-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  
+  .customer-drawer-title {
+    font-weight: 700;
+    font-size: var(--text-base);
+    color: #fff;
+  }
+  
+  .customer-drawer-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    padding: var(--space-1);
+    display: flex;
+    align-items: center;
+  }
+  
+  .customer-header-content {
+    position: fixed;
+    top: 0;
+    right: -280px;
+    width: 260px;
+    height: 100dvh;
+    background: var(--color-sidebar-bg);
+    z-index: 200;
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-4);
+    box-shadow: -4px 0 15px rgba(0,0,0,0.2);
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex; /* Always flex, slid off-canvas */
+  }
+  
+  .customer-header-content.open {
+    right: 0;
+  }
+  
+  .customer-header-nav {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .customer-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: var(--space-4);
+    margin-top: auto; /* Push to bottom of drawer */
+  }
+  
+  .customer-user-name {
+    text-align: center;
+    margin-bottom: var(--space-2);
+  }
+  
+  /* Make sure inputs and buttons on the dashboard wrap properly without overflowing */
+  .statement-download-panel .sdp-field,
+  .financial-filter-row > .financial-filter-control,
+  .financial-filter-row > .report-status-chip,
+  .financial-filter-row .ui-button {
+    flex: 1 1 auto;
+  }
+  
+  .statement-download-panel .sdp-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .financial-filter-row {
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  /* Preset chips wrap naturally — no override needed */
+
+  /* Date range sub-row: keep inputs + Apply on one line, allow wrapping below chips */
+  .financial-filter-row .financial-filter-row,
+  .financial-filter-row--date {
+    width: 100%;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .financial-filter-row--date .financial-filter-control {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 0; /* let flex sizing take over */
+  }
 }
 
 /* ─── Pulse (used by live badge) ─── */

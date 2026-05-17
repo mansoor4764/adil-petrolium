@@ -4,6 +4,7 @@ import { toInputDatePK } from '../../utils/pkFormat';
 import { SectionHeader, Section } from '../../components/ui/Section';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { Select } from '../../components/ui/Select';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -32,28 +33,21 @@ const InfoChip = ({ color, children }) => (
 );
 
 const StatCard = ({ label, value, hint, accent, icon }) => (
-  <div
-    className="report-stat-card"
-    style={{
-      '--card-accent': accent,
-    }}
-  >
-    <div className="report-stat-card__top">
-      <span className="report-stat-card__label">
-        {label}
-      </span>
-      <span className="report-stat-card__icon">
-        {icon}
-      </span>
+  <div style={{
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-xl)',
+    boxShadow: 'var(--shadow-sm)',
+    padding: 'var(--space-4)',
+    display: 'flex',
+    flexDirection: 'column',
+  }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>{label}</div>
+      <div style={{ background: 'var(--color-surface-offset)', padding: 'var(--space-1)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
     </div>
-
-    <div className="report-stat-card__value">
-      {value}
-    </div>
-
-    <div className="report-stat-card__hint">
-      {hint}
-    </div>
+    <div style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-xl)', fontWeight: 700, color: accent || 'var(--color-text)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{value}</div>
+    {hint ? <div style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', fontWeight: 500 }}>{hint}</div> : null}
   </div>
 );
 
@@ -127,7 +121,7 @@ const ExportCard = ({
     <div className="report-export-card__body">
       <div className="report-export-card__controls">
         {controls}
-        <Button onClick={onSubmit} loading={loading}>
+        <Button size="lg" onClick={onSubmit} loading={loading}>
           {buttonLabel}
         </Button>
       </div>
@@ -257,6 +251,7 @@ export default function ExportCenter() {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 max={todayStr}
+                style={{ height: 44, minHeight: 44 }}
               />
             </div>
           }
@@ -278,21 +273,19 @@ export default function ExportCenter() {
           buttonLabel="Export Monthly Excel"
           controls={
             <div className="report-export-card__controlGroup">
-              <div className="report-filter">
-                <FieldLabel>Month</FieldLabel>
-                <select className="report-filter__control" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
+              <div style={{ minWidth: 120 }}>
+                <Select label="Month" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
                   {availableMonths.map((m) => (
                     <option key={m.value} value={m.value}>{m.label}</option>
                   ))}
-                </select>
+                </Select>
               </div>
-              <div className="report-filter">
-                <FieldLabel>Year</FieldLabel>
-                <select className="report-filter__control" value={year} onChange={(e) => setYear(Number(e.target.value))}>
+              <div style={{ minWidth: 100 }}>
+                <Select label="Year" value={year} onChange={(e) => setYear(Number(e.target.value))}>
                   {availableYears.map((optionYear) => (
                     <option key={optionYear} value={optionYear}>{optionYear}</option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
           }
@@ -316,13 +309,12 @@ export default function ExportCenter() {
           error={errors.yearly}
           buttonLabel="Export Yearly Excel"
           controls={
-            <div className="report-filter">
-              <FieldLabel>Year</FieldLabel>
-              <select className="report-filter__control" value={yearOnly} onChange={(e) => setYearOnly(Number(e.target.value))}>
+            <div style={{ minWidth: 120 }}>
+              <Select label="Year" value={yearOnly} onChange={(e) => setYearOnly(Number(e.target.value))}>
                 {availableYears.map((optionYear) => (
                   <option key={optionYear} value={optionYear}>{optionYear}</option>
                 ))}
-              </select>
+              </Select>
             </div>
           }
           onSubmit={() =>

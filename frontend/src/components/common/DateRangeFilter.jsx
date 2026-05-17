@@ -60,12 +60,12 @@ export const DateRangeFilter = ({ onFilter }) => {
           {p.label}
         </button>
       ))}
-      <div className="financial-filter-row">
+      <div className="financial-filter-row financial-filter-row--date">
         <input className="financial-filter-control" type="date" value={start} onChange={e => setStart(e.target.value)} max={todayStr} />
-        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>to</span>
+        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>to</span>
         <input className="financial-filter-control" type="date" value={end} onChange={e => setEnd(e.target.value)} max={todayStr} />
-        <Button size="sm" onClick={applyCustom} disabled={!start || !end}>Apply</Button>
-        {active && <Button size="sm" variant="ghost" onClick={clear}>Clear</Button>}
+        <Button size="sm" onClick={applyCustom} disabled={!start || !end} style={{ flexShrink: 0 }}>Apply</Button>
+        {active && <Button size="sm" variant="ghost" onClick={clear} style={{ flexShrink: 0 }}>Clear</Button>}
       </div>
     </div>
   );

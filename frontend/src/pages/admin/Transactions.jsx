@@ -10,16 +10,15 @@ import { SectionHeader } from '../../components/ui/Section';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
+import { Select } from '../../components/ui/Select';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import { usePagination } from '../../hooks/usePagination';
-import { generateCustomerStatementPdf } from '../../utils/pdf/customerStatementPdf';
 import {
   formatCurrencyPK,
   formatDatePK,
   formatDateTimePK,
   formatNumberPK,
   formatRatePK,
-  toInputDatePK,
   PK_TIMEZONE,
 } from '../../utils/pkFormat';
 
@@ -152,7 +151,6 @@ export default function Transactions() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [customerLoading, setCustomerLoading] = useState(true);
-  const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [filters, setFilters] = useState({
@@ -172,7 +170,7 @@ export default function Transactions() {
   const [voidReason, setVoidReason] = useState('');
   const [voidLoading, setVoidLoading] = useState(false);
 
-  const todayStr = useMemo(() => toInputDatePK(), []);
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const { page, limit, goTo } = usePagination(20);
 
   const customerIdFromUrl = searchParams.get('customerId');
@@ -310,19 +308,11 @@ export default function Transactions() {
     );
 
     return ordered
-      .map((tx, index) => {
+      .map((tx) => {
         const total = Number(tx.totalAmount) || 0;
         const payment = Number(tx.paymentReceived) || 0;
         const debit = total > 0 ? total : 0;
         const credit = payment + (total < 0 ? Math.abs(total) : 0);
-        
-        // For first transaction, use previousBalance as opening balance
-        // For subsequent transactions, calculate based on previous balance
-        if (index === 0) {
-          balance = Number(tx.previousBalance || 0);
-        }
-        
-        // Calculate running balance: previousBalance + sales - payments
         balance += total - payment;
 
         return {
@@ -330,7 +320,7 @@ export default function Transactions() {
           id: tx.id || tx._id,
           debit,
           credit,
-          runningBalance: balance,
+          runningBalance: Number(tx.updatedBalance ?? balance),
         };
       });
   }, [rows]);
@@ -390,12 +380,10 @@ export default function Transactions() {
     }
 
     try {
-      // Default to current date if no dates selected
-      const today = toInputDatePK(); // YYYY-MM-DD format (Pakistan timezone)
       const response = await downloadAdminStatementExcel({
         customerId,
-        startDate: filters.startDate || today,
-        endDate: filters.endDate || today,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
       });
 
       const blob = new Blob([response.data], {
@@ -407,7 +395,7 @@ export default function Transactions() {
         .replace(/^-|-$/g, '')
         .toLowerCase();
 
-      const fromPart = filters.startDate || 'today';
+      const fromPart = filters.startDate || 'start';
       const toPart = filters.endDate || 'today';
       const filename = `statement-${safeName}-${fromPart}-${toPart}.xlsx`;
 
@@ -425,29 +413,6 @@ export default function Transactions() {
     }
   }, [isStatementMode, selectedCustomer, filters.startDate, filters.endDate]);
 
-  const handleDownloadPdf = useCallback(async () => {
-    if (!isStatementMode || !selectedCustomer || statementRows.length === 0) {
-      setError('No statement data available for PDF export');
-      return;
-    }
-
-    setPdfLoading(true);
-    try {
-      generateCustomerStatementPdf({
-        customer: selectedCustomer,
-        statementRows,
-        totals,
-        filters,
-        company: { name: 'Adil Petroleum' },
-      });
-    } catch (err) {
-      console.error('Error generating PDF:', err);
-      setError(err.message || 'Failed to generate PDF statement');
-    } finally {
-      setPdfLoading(false);
-    }
-  }, [isStatementMode, selectedCustomer, statementRows, totals, filters]);
-
   return (
     <div>
     <div className="animate-fadeIn report-page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
@@ -459,51 +424,38 @@ export default function Transactions() {
         action={
           <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
             {isStatementMode ? (
-              <>
-                <Button 
-                  variant="secondary" 
-                  onClick={handleDownloadPdf}
-                  loading={pdfLoading}
-                  disabled={statementRows.length === 0}
-                >
-                  📄 Download PDF
-                </Button>
-                <Button variant="secondary" onClick={handleShareStatement}>
-                  ⬇ Download Statement
-                </Button>
-              </>
+              <Button variant="secondary" onClick={handleShareStatement}>
+                ⬇ Download Statement
+              </Button>
             ) : null}
             <Button onClick={() => setShowCreate(true)}>Receive Payment</Button>
           </div>
         }
       />
 
-          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 'var(--space-3)', alignItems: 'flex-end' }}>
-          <div style={{ gridColumn: 'span 3' }}>
-            <Field label="Customer">
-              <select
-                value={draftFilters.customerId}
-                onChange={(e) =>
-                  setDraftFilters((prev) => ({
-                    ...prev,
-                    customerId: e.target.value,
-                  }))
-                }
-                className="financial-filter-control"
-                style={{ height: '40px', minHeight: '40px' }}
-              >
-                <option value="">All Customers</option>
-                {customerLoading ? <option value="">Loading...</option> : null}
-                {customers.map((customer) => (
-                  <option key={customer.id || customer._id} value={customer.id || customer._id}>
-                    {customer.customerCode} · {customer.userId?.name || 'Unknown'}
-                  </option>
-                ))}
-              </select>
-            </Field>
+          <div className="financial-detail-card__body form-grid-12" style={{ alignItems: 'end', paddingBottom: 'var(--space-4)' }}>
+          <div style={{ gridColumn: 'span 4' }}>
+            <Select
+              label="Customer"
+              value={draftFilters.customerId}
+              onChange={(e) =>
+                setDraftFilters((prev) => ({
+                  ...prev,
+                  customerId: e.target.value,
+                }))
+              }
+            >
+              <option value="">All Customers</option>
+              {customerLoading ? <option value="">Loading...</option> : null}
+              {customers.map((customer) => (
+                <option key={customer.id || customer._id} value={customer.id || customer._id}>
+                  {customer.customerCode} · {customer.userId?.name || 'Unknown'}
+                </option>
+              ))}
+            </Select>
           </div>
 
-          <div style={{ gridColumn: 'span 2' }}>
+          <div style={{ gridColumn: 'span 3' }}>
             <Input
               label="From"
               type="date"
@@ -519,7 +471,7 @@ export default function Transactions() {
             />
           </div>
 
-          <div style={{ gridColumn: 'span 2' }}>
+          <div style={{ gridColumn: 'span 3' }}>
             <Input
               label="To"
               type="date"
@@ -537,13 +489,12 @@ export default function Transactions() {
 
           <div
             style={{
-              gridColumn: 'span 5',
+              gridColumn: 'span 2',
               display: 'flex',
-              flexDirection: 'column',
               gap: 'var(--space-2)',
-              justifyContent: 'flex-end',
-              alignItems: 'flex-end',
-              paddingRight: 'var(--space-2)',
+              justifyContent: 'flex-start',
+              flexWrap: 'wrap',
+              paddingTop: 'var(--space-2)',
             }}
           >
             <Button onClick={applyFilters}>Apply</Button>
@@ -556,8 +507,8 @@ export default function Transactions() {
 
       {isStatementMode && selectedCustomer ? (
         <div className="financial-detail-card" style={{ marginTop: 'var(--space-6)' }}>
-          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-5)', borderBottom: '1px solid var(--color-divider)', paddingBottom: 'var(--space-5)' }}>
-            <div style={{ borderRight: '1px solid var(--color-divider)', paddingRight: 'var(--space-5)' }}>
+          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-5)', borderBottom: '1px solid var(--color-divider)', paddingBottom: 'var(--space-5)' }}>
+            <div>
               <div style={SECTION_TITLE}>Account Holder</div>
               <div
                 style={{
@@ -596,7 +547,7 @@ export default function Transactions() {
             </div>
           </div>
 
-          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-5)', marginTop: 'var(--space-5)' }}>
+          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-5)', marginTop: 'var(--space-5)' }}>
             <div>
               <div style={SECTION_TITLE}>Statement Period</div>
               <div style={{ marginTop: 'var(--space-2)', fontWeight: 600, fontSize: 'var(--text-sm)' }}>
@@ -705,7 +656,7 @@ export default function Transactions() {
           </div>
 
           <div className="financial-table-wrap">
-            <table className="financial-table" style={{ tableLayout: 'fixed' }}>
+            <table className="financial-table" style={{ tableLayout: 'fixed', minWidth: '850px' }}>
               <colgroup>
                 <col style={{ width: '13%' }} />
                 <col style={{ width: '16%' }} />
@@ -825,7 +776,7 @@ export default function Transactions() {
           </div>
 
           {isStatementMode ? (
-            <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-4)', borderTop: '1px solid var(--color-divider)', paddingTop: 'var(--space-4)' }}>
+            <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)', borderTop: '1px solid var(--color-divider)', paddingTop: 'var(--space-4)' }}>
               <div
                 style={{
                   border: '1px solid var(--color-border)',
