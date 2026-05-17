@@ -13,7 +13,7 @@ setInterval(() => {
       }
     }
   });
-}, 15000);
+}, 20000);
 
 function addClient(customerId, res) {
   const key = String(customerId);
