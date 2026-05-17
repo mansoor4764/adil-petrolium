@@ -4,6 +4,16 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
+// jspdf (via iobuffer) requires TextEncoder/TextDecoder which jsdom doesn't provide.
+// Polyfill them from Node's built-in 'util' module.
+const { TextEncoder, TextDecoder } = require('util');
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = TextEncoder;
+}
+if (typeof global.TextDecoder === 'undefined') {
+  global.TextDecoder = TextDecoder;
+}
+
 // CRA sets resetMocks: true in its internal jest config, which wipes mock
 // implementations between every test. We must re-apply the matchMedia mock
 // before each test so window.matchMedia(...) never returns undefined.
