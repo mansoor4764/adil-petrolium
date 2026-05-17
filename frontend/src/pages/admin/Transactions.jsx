@@ -12,12 +12,14 @@ import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import { usePagination } from '../../hooks/usePagination';
+import { generateCustomerStatementPdf } from '../../utils/pdf/customerStatementPdf';
 import {
   formatCurrencyPK,
   formatDatePK,
   formatDateTimePK,
   formatNumberPK,
   formatRatePK,
+  toInputDatePK,
   PK_TIMEZONE,
 } from '../../utils/pkFormat';
 
@@ -150,6 +152,7 @@ export default function Transactions() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [customerLoading, setCustomerLoading] = useState(true);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [filters, setFilters] = useState({
@@ -169,7 +172,7 @@ export default function Transactions() {
   const [voidReason, setVoidReason] = useState('');
   const [voidLoading, setVoidLoading] = useState(false);
 
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = useMemo(() => toInputDatePK(), []);
   const { page, limit, goTo } = usePagination(20);
 
   const customerIdFromUrl = searchParams.get('customerId');
@@ -307,11 +310,19 @@ export default function Transactions() {
     );
 
     return ordered
-      .map((tx) => {
+      .map((tx, index) => {
         const total = Number(tx.totalAmount) || 0;
         const payment = Number(tx.paymentReceived) || 0;
         const debit = total > 0 ? total : 0;
         const credit = payment + (total < 0 ? Math.abs(total) : 0);
+        
+        // For first transaction, use previousBalance as opening balance
+        // For subsequent transactions, calculate based on previous balance
+        if (index === 0) {
+          balance = Number(tx.previousBalance || 0);
+        }
+        
+        // Calculate running balance: previousBalance + sales - payments
         balance += total - payment;
 
         return {
@@ -319,7 +330,7 @@ export default function Transactions() {
           id: tx.id || tx._id,
           debit,
           credit,
-          runningBalance: Number(tx.updatedBalance ?? balance),
+          runningBalance: balance,
         };
       });
   }, [rows]);
@@ -379,10 +390,12 @@ export default function Transactions() {
     }
 
     try {
+      // Default to current date if no dates selected
+      const today = toInputDatePK(); // YYYY-MM-DD format (Pakistan timezone)
       const response = await downloadAdminStatementExcel({
         customerId,
-        startDate: filters.startDate || undefined,
-        endDate: filters.endDate || undefined,
+        startDate: filters.startDate || today,
+        endDate: filters.endDate || today,
       });
 
       const blob = new Blob([response.data], {
@@ -394,7 +407,7 @@ export default function Transactions() {
         .replace(/^-|-$/g, '')
         .toLowerCase();
 
-      const fromPart = filters.startDate || 'start';
+      const fromPart = filters.startDate || 'today';
       const toPart = filters.endDate || 'today';
       const filename = `statement-${safeName}-${fromPart}-${toPart}.xlsx`;
 
@@ -412,6 +425,29 @@ export default function Transactions() {
     }
   }, [isStatementMode, selectedCustomer, filters.startDate, filters.endDate]);
 
+  const handleDownloadPdf = useCallback(async () => {
+    if (!isStatementMode || !selectedCustomer || statementRows.length === 0) {
+      setError('No statement data available for PDF export');
+      return;
+    }
+
+    setPdfLoading(true);
+    try {
+      generateCustomerStatementPdf({
+        customer: selectedCustomer,
+        statementRows,
+        totals,
+        filters,
+        company: { name: 'Adil Petroleum' },
+      });
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      setError(err.message || 'Failed to generate PDF statement');
+    } finally {
+      setPdfLoading(false);
+    }
+  }, [isStatementMode, selectedCustomer, statementRows, totals, filters]);
+
   return (
     <div>
     <div className="animate-fadeIn report-page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
@@ -423,17 +459,27 @@ export default function Transactions() {
         action={
           <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
             {isStatementMode ? (
-              <Button variant="secondary" onClick={handleShareStatement}>
-                ⬇ Download Statement
-              </Button>
+              <>
+                <Button 
+                  variant="secondary" 
+                  onClick={handleDownloadPdf}
+                  loading={pdfLoading}
+                  disabled={statementRows.length === 0}
+                >
+                  📄 Download PDF
+                </Button>
+                <Button variant="secondary" onClick={handleShareStatement}>
+                  ⬇ Download Statement
+                </Button>
+              </>
             ) : null}
             <Button onClick={() => setShowCreate(true)}>Receive Payment</Button>
           </div>
         }
       />
 
-          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 'var(--space-3)', alignItems: 'start' }}>
-          <div style={{ gridColumn: 'span 4' }}>
+          <div className="financial-detail-card__body" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 'var(--space-3)', alignItems: 'flex-end' }}>
+          <div style={{ gridColumn: 'span 3' }}>
             <Field label="Customer">
               <select
                 value={draftFilters.customerId}
@@ -457,7 +503,7 @@ export default function Transactions() {
             </Field>
           </div>
 
-          <div style={{ gridColumn: 'span 3' }}>
+          <div style={{ gridColumn: 'span 2' }}>
             <Input
               label="From"
               type="date"
@@ -473,7 +519,7 @@ export default function Transactions() {
             />
           </div>
 
-          <div style={{ gridColumn: 'span 3' }}>
+          <div style={{ gridColumn: 'span 2' }}>
             <Input
               label="To"
               type="date"
@@ -491,13 +537,13 @@ export default function Transactions() {
 
           <div
             style={{
-              gridColumn: 'span 2',
+              gridColumn: 'span 5',
               display: 'flex',
+              flexDirection: 'column',
               gap: 'var(--space-2)',
               justifyContent: 'flex-end',
-              flexWrap: 'wrap',
               alignItems: 'flex-end',
-              paddingBottom: '3px',
+              paddingRight: 'var(--space-2)',
             }}
           >
             <Button onClick={applyFilters}>Apply</Button>

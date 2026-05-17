@@ -257,10 +257,24 @@ const writeLedgerHeader = ({ worksheet, title, customerName, customerCode, addre
 };
 
 const writeLedgerRows = (worksheet, transactions) => {
+  let runningBalance = 0;
+  
+  // Get opening balance from first transaction's previousBalance
+  if (transactions.length > 0) {
+    runningBalance = Number(transactions[0].previousBalance || 0);
+  }
+
   transactions.forEach((tx) => {
-    const balance = Number(tx.updatedBalance || 0);
     const fuelQty = Number(tx.fuelQuantity || 0);
     const { debit, credit } = ledgerDebitCredit(tx);
+    
+    // Calculate running balance based on transaction amounts
+    const totalAmount = Number(tx.totalAmount || 0);
+    const paymentReceived = Number(tx.paymentReceived || 0);
+    runningBalance = runningBalance + totalAmount - paymentReceived;
+    
+    // Normalize to 2 decimal places
+    const balance = Math.round(runningBalance * 100) / 100;
 
     const row = worksheet.addRow([
       fmtDate(tx.transactionDate),
@@ -511,7 +525,7 @@ const generateYearlyExcel = async (year, customerId = null) => {
 const generateCustomerStatement = async ({ customerId, startDate, endDate }) => {
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  const from = coercePkRangeStart(startDate) || parsePkYearStart(today.getFullYear());
+  const from = coercePkRangeStart(startDate) || parsePkDateStart(todayKey);
   const to = coercePkRangeEnd(endDate) || parsePkDateEnd(todayKey);
 
   return buildStatementWorkbook({
