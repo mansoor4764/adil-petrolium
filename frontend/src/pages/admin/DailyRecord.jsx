@@ -74,7 +74,7 @@ export default function DailyRecord() {
   const [dateReady,     setDateReady]    = useState(false);
   const [searchQuery,   setSearchQuery]   = useState('');
 
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = useMemo(() => toInputDatePK(), []);
 
   const loadDailySummary = useCallback(async () => {
     setLoadingSummary(true); setSummaryError('');
