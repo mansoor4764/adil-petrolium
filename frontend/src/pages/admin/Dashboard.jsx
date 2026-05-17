@@ -45,15 +45,6 @@ const KPI = ({ label, value, sub, accent, icon }) => {
           {sub}
         </p>
       ) : null}
-
-      <div
-        style={{
-          height: 3,
-          borderRadius: 2,
-          marginTop: 'var(--space-1)',
-          background: `color-mix(in oklch, ${accent || 'var(--color-primary)'} 28%, transparent)`,
-        }}
-      />
     </div>
   );
 };
@@ -170,7 +161,7 @@ export default function AdminDashboard() {
               startDate: monthStart,
               endDate: monthEnd,
               page,
-              limit: 500,
+              limit: 100,
             });
 
             all.push(...(response.data?.data || []));
@@ -350,7 +341,7 @@ export default function AdminDashboard() {
         ) : null}
       </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 'var(--space-5)', alignItems: 'start' }}>
+      <div className="admin-dashboard-summary-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 'var(--space-5)', alignItems: 'start' }}>
         {summary.topDebtors.length > 0 ? (
           <div className="financial-table-shell">
             <div className="financial-table-toolbar">

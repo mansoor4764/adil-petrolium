@@ -35,8 +35,22 @@ export default function AdminLayout() {
     nav('/login', { replace: true });
   };
 
+  const shellStyle = {
+    display: 'flex',
+    minHeight: '100dvh',
+    height: isMobile ? 'auto' : '100vh',
+    overflow: isMobile ? 'visible' : 'hidden',
+  };
+
+  const contentStyle = {
+    flex: 1,
+    padding: isMobile ? 'var(--space-4)' : 'var(--space-4) var(--space-5)',
+    overflow: isMobile ? 'visible' : 'auto',
+    WebkitOverflowScrolling: 'touch',
+  };
+
   return (
-    <div className="admin-shell" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div className="admin-shell" style={shellStyle}>
       {isMobile && mobileMenuOpen && (
         <div
           onClick={() => setMobileMenuOpen(false)}
@@ -238,7 +252,7 @@ export default function AdminLayout() {
             </button>
           </div>
         </header>
-        <div className="admin-shell__content" style={{ flex: 1, padding: isMobile ? 'var(--space-4)' : 'var(--space-4) var(--space-5)', overflow: 'auto' }}>
+        <div className="admin-shell__content" style={contentStyle}>
           <Outlet />
         </div>
       </main>

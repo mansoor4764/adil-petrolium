@@ -94,6 +94,17 @@ const updateCustomer = async ({ profileId, updates, updatedBy, requestId }) => {
   const sanitized = {};
   allowedFields.forEach(f => { if (updates[f] !== undefined) sanitized[f] = updates[f]; });
 
+  // Block deactivation when customer has an outstanding balance
+  if (sanitized.isActive === false) {
+    const current = await CustomerProfile.findById(profileId).select('currentBalance').lean();
+    if (current && Number(current.currentBalance) > 0) {
+      throw new AppError(
+        `Cannot deactivate customer with an outstanding balance of PKR ${Number(current.currentBalance).toLocaleString('en-PK', { minimumFractionDigits: 2 })}. Clear the balance first.`,
+        400
+      );
+    }
+  }
+
   const profile = await CustomerProfile.findByIdAndUpdate(
     profileId, sanitized, { new: true, runValidators: true }
   ).populate('userId', 'name email');
