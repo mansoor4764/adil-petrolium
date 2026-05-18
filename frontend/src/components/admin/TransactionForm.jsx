@@ -9,7 +9,7 @@ const CARD = {
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-xl)',
   boxShadow: 'var(--shadow-sm)',
-  padding: 'var(--space-5)',
+  padding: 'clamp(var(--space-3), 4vw, var(--space-5))',
 };
 
 const SECTION_TITLE = {
@@ -38,11 +38,11 @@ const clampMoney = (value) => {
 const SummaryCard = ({ label, value, tone }) => (
   <div
     style={{
-      padding: 'var(--space-4)',
+      padding: 'clamp(var(--space-3), 3vw, var(--space-4))',
       background: `color-mix(in oklch, ${tone} 7%, var(--color-surface))`,
       border: `1px solid color-mix(in oklch, ${tone} 18%, transparent)`,
       borderRadius: 'var(--radius-lg)',
-      minHeight: 92,
+      minHeight: 'clamp(80px, 15vw, 92px)',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
@@ -52,7 +52,7 @@ const SummaryCard = ({ label, value, tone }) => (
     <div style={SECTION_TITLE}>{label}</div>
     <div
       style={{
-        fontSize: 'var(--text-lg)',
+        fontSize: 'clamp(var(--text-base), 4vw, var(--text-lg))',
         fontWeight: 700,
         color: tone,
         fontVariantNumeric: 'tabular-nums',
@@ -244,8 +244,8 @@ export const TransactionForm = ({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 'var(--space-4)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))',
+            gap: 'var(--space-3)',
             marginBottom: 'var(--space-5)',
           }}
         >
@@ -269,11 +269,11 @@ export const TransactionForm = ({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-            gap: 'var(--space-4)',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
+            gap: 'var(--space-3)',
           }}
         >
-          <div style={{ gridColumn: 'span 4' }}>
+          <div>
             <Input
               label="Payment Received (PKR)"
               type="number"
@@ -286,7 +286,7 @@ export const TransactionForm = ({
             />
           </div>
 
-          <div style={{ gridColumn: 'span 4' }}>
+          <div>
             <Input
               label="Date & Time"
               type="datetime-local"
@@ -298,7 +298,7 @@ export const TransactionForm = ({
             />
           </div>
 
-          <div style={{ gridColumn: 'span 4' }}>
+          <div>
             <Input
               label="Reference No."
               value={form.referenceNo}
@@ -315,7 +315,7 @@ export const TransactionForm = ({
       <div
         style={{
           ...CARD,
-          padding: 'var(--space-4) var(--space-5)',
+          padding: 'clamp(var(--space-3), 4vw, var(--space-4))',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -323,24 +323,27 @@ export const TransactionForm = ({
           flexWrap: 'wrap',
         }}
       >
-        <div>
+        <div style={{ flex: '1 1 auto', minWidth: '120px' }}>
           <div style={SECTION_TITLE}>Submission Summary</div>
         </div>
 
         <div
           style={{
             display: 'flex',
-            gap: 'var(--space-3)',
+            gap: 'var(--space-2)',
             justifyContent: 'flex-end',
             flexWrap: 'wrap',
+            flex: '0 0 auto',
+            width: '100%',
+            maxWidth: '100%',
           }}
         >
           {onCancel ? (
-            <Button type="button" variant="ghost" onClick={onCancel}>
+            <Button type="button" variant="ghost" onClick={onCancel} style={{ flex: '1 1 auto', minWidth: '100px' }}>
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" loading={loading} disabled={customerIsActive === false}>
+          <Button type="submit" loading={loading} disabled={customerIsActive === false} style={{ flex: '1 1 auto', minWidth: '140px' }}>
             Record Payment
           </Button>
         </div>

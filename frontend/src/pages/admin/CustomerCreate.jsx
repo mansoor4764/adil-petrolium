@@ -224,11 +224,12 @@ export default function CustomerCreate() {
 
             <div style={{ gridColumn: 'span 4' }}>
               <Input
-                label="Customer Code"
+                label="CNIC"
                 value={form.customerCode}
                 onChange={(e) => setForm((current) => ({ ...current, customerCode: e.target.value }))}
                 error={validationErrors.customerCode}
                 required
+                hint="National Identity Card Number"
               />
             </div>
 
