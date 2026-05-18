@@ -45,6 +45,41 @@ module.exports = async (req, res) => {
       });
     });
     
+    // Temporary admin creation endpoint
+    app.post('/create-admin-temp', async (req, res) => {
+      try {
+        const { adminSecret } = req.body;
+        
+        if (adminSecret !== process.env.ADMIN_REGISTRATION_SECRET) {
+          return res.status(403).json({ success: false, message: 'Invalid admin secret' });
+        }
+        
+        const User = require('./src/models/User');
+        
+        const existing = await User.findOne({ email: 'admin@adilpetroleum.com' });
+        if (existing) {
+          return res.json({ success: true, message: 'Admin already exists', email: 'admin@adilpetroleum.com' });
+        }
+        
+        const admin = await User.create({
+          name: 'Admin User',
+          email: 'admin@adilpetroleum.com',
+          password: 'Admin@12345',
+          role: 'admin',
+          isActive: true,
+        });
+        
+        return res.json({
+          success: true,
+          message: 'Admin created successfully',
+          email: admin.email,
+          password: 'Admin@12345'
+        });
+      } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+      }
+    });
+    
     // Step 6: Try to load mongoose and connect
     const mongoose = require('mongoose');
     
