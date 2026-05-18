@@ -1,156 +1,104 @@
-// Vercel serverless entry point
-require('dotenv').config();
-const express = require('express');
-const helmet = require('helmet');
-const cors = require('cors');
-const mongoSanitize = require('express-mongo-sanitize');
-const compression = require('compression');
-const cookieParser = require('cookie-parser');
-const mongoose = require('mongoose');
-
-const config = require('./src/config');
-const requestLogger = require('./src/middleware/requestLogger');
-const errorHandler = require('./src/middleware/errorHandler');
-const { globalLimiter } = require('./src/middleware/rateLimiter');
-const routes = require('./src/routes');
-
-// Create Express app
-const app = express();
-
-// Database connection cache
-let cachedDb = null;
-
-async function connectToDatabase() {
-  if (cachedDb && mongoose.connection.readyState === 1) {
-    console.log('=> Using cached database connection');
-    return cachedDb;
-  }
-
-  console.log('=> Creating new database connection');
-  
-  try {
-    const db = await mongoose.connect(config.mongo.uri, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      maxPoolSize: 10,
-      minPoolSize: 1,
-    });
-    
-    cachedDb = db;
-    console.log('=> Database connected successfully');
-    return db;
-  } catch (error) {
-    console.error('=> Database connection error:', error.message);
-    throw error;
-  }
-}
-
-// CORS Configuration - MUST be before other middleware
-const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = config.cors.allowedOrigins;
-    
-    // Allow requests with no origin (like mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400, // 24 hours
-};
-
-app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
-
-// Security Headers (after CORS)
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:'],
-    },
-  },
-  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-}));
-
-// Body Parsing
-app.use(compression({
-  filter: (req, res) => {
-    const type = res.getHeader('Content-Type');
-    if (typeof type === 'string' && type.toLowerCase().includes('text/event-stream')) {
-      return false;
-    }
-    return compression.filter(req, res);
-  },
-}));
-
-app.use(cookieParser());
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-
-// NoSQL Injection Prevention
-app.use(mongoSanitize({ replaceWith: '_' }));
-
-// Request Logging + Rate Limiting
-app.use(requestLogger);
-app.use(globalLimiter);
-
-// Health Check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    ts: new Date().toISOString(),
-    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    allowedOrigins: config.cors.allowedOrigins,
-  });
-});
-
-// API Routes
-app.use(`/api/${config.apiVersion}`, routes);
-
-// 404 Handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.url}`,
-  });
-});
-
-// Global Error Handler
-app.use(errorHandler);
-
-// Serverless Handler
+// Vercel serverless entry point - Step by step loading
 module.exports = async (req, res) => {
   try {
-    // Connect to database
-    await connectToDatabase();
+    // Step 1: Load dotenv
+    require('dotenv').config();
     
-    // Handle request with Express
+    // Step 2: Load Express
+    const express = require('express');
+    const app = express();
+    
+    // Step 3: Basic middleware
+    app.use(express.json({ limit: '10kb' }));
+    app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+    
+    // Step 4: Simple CORS middleware (without cors package)
+    app.use((req, res, next) => {
+      const allowedOrigins = [
+        'https://adil-petrolium-4t91.vercel.app',
+        'http://localhost:3000'
+      ];
+      
+      const origin = req.headers.origin;
+      if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+      }
+      
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      
+      // Handle preflight
+      if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+      }
+      
+      next();
+    });
+    
+    // Step 5: Health check
+    app.get('/health', (req, res) => {
+      res.json({
+        status: 'ok',
+        ts: new Date().toISOString(),
+        env: process.env.NODE_ENV,
+      });
+    });
+    
+    // Step 6: Try to load mongoose and connect
+    const mongoose = require('mongoose');
+    
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      });
+    }
+    
+    // Step 7: Load other middleware
+    const helmet = require('helmet');
+    const mongoSanitize = require('express-mongo-sanitize');
+    const cookieParser = require('cookie-parser');
+    
+    app.use(helmet({
+      contentSecurityPolicy: false,
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+    }));
+    app.use(mongoSanitize({ replaceWith: '_' }));
+    app.use(cookieParser());
+    
+    // Step 8: Load config and routes
+    const config = require('./src/config');
+    const requestLogger = require('./src/middleware/requestLogger');
+    const { globalLimiter } = require('./src/middleware/rateLimiter');
+    const routes = require('./src/routes');
+    const errorHandler = require('./src/middleware/errorHandler');
+    
+    app.use(requestLogger);
+    app.use(globalLimiter);
+    
+    // Step 9: API routes
+    app.use(`/api/${config.apiVersion}`, routes);
+    
+    // Step 10: 404 and error handlers
+    app.use((req, res) => {
+      res.status(404).json({
+        success: false,
+        message: `Route not found: ${req.method} ${req.url}`,
+      });
+    });
+    
+    app.use(errorHandler);
+    
+    // Handle the request
     return app(req, res);
-  } catch (error) {
-    console.error('Serverless function error:', error);
     
+  } catch (error) {
+    console.error('Function error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'An error occurred',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
-
-// Export app for testing
-module.exports.app = app;
