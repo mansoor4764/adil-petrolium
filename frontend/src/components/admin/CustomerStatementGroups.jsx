@@ -36,37 +36,10 @@ const numericCellStyle = {
 const fmt = formatCurrencyPK;
 const fmtL = (value) => `${formatNumberPK(value, 0, 0)} L`;
 
-const footerKeyStyle = {
-  fontSize: '8px',
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  color: 'var(--color-text-muted)',
-};
-
 const footerValueStyle = {
   fontWeight: 700,
   fontSize: '10px',
   fontVariantNumeric: 'tabular-nums',
-};
-
-const footerRowStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: '4px',
-};
-
-const footerLabelStyle = {
-  fontWeight: 700,
-  fontSize: '10px',
-};
-
-const miniLabelStyle = {
-  fontSize: '9px',
-  fontWeight: 700,
-  color: 'var(--color-text-muted)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.04em',
 };
 
 const miniValueStyle = {

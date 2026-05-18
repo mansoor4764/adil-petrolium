@@ -275,7 +275,7 @@ export const generateCustomerStatementPdf = ({
   pdf.text(formatMoney(paymentsTotal), dividerX1 + 2, summaryY + 8);
 
   // Column 3: Net Balance
-  const closingBalance = salesTotal - paymentsTotal;
+  const netBalance = salesTotal - paymentsTotal;
   pdf.setFont('Helvetica', 'normal');
   pdf.setFontSize(8);
   pdf.setTextColor(colors.secondary);
@@ -283,7 +283,7 @@ export const generateCustomerStatementPdf = ({
   pdf.setFont('Helvetica', 'bold');
   pdf.setFontSize(10);
   pdf.setTextColor(colors.primary);
-  pdf.text(formatMoney(closingBalance), dividerX2 + 2, summaryY + 8);
+  pdf.text(formatMoney(netBalance), dividerX2 + 2, summaryY + 8);
 
   currentY = summaryY + 16;
 

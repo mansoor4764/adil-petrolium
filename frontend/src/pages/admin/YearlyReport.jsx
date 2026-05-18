@@ -8,6 +8,8 @@ import { formatNumberPK, formatCurrencyShortPK } from '../../utils/pkFormat';
 const fmt = formatCurrencyShortPK;
 const fmtL = (v) => `${formatNumberPK(v, 0, 0)} L`;
 
+// Removed unused variables: closingBalance, productTotals, totalDebitTransactions, totalCreditTransactions, totalCustomers
+
 const SummaryCard = ({ label, value, hint, accent }) => (
   <div style={{
     background: 'var(--color-surface)',

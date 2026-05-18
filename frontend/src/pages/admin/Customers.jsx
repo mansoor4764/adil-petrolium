@@ -4,7 +4,7 @@ import { getCustomers }  from '../../api/customerApi';
 import { CustomerTable } from '../../components/admin/CustomerTable';
 import { Pagination }    from '../../components/common/Pagination';
 import { Button }        from '../../components/ui/Button';
-import { Section, SectionHeader } from '../../components/ui/Section';
+
 import { usePagination } from '../../hooks/usePagination';
 
 export default function Customers() {

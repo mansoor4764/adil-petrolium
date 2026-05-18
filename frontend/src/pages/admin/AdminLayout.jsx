@@ -16,7 +16,7 @@ const NAV = [
 ];
 
 export default function AdminLayout() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const nav = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

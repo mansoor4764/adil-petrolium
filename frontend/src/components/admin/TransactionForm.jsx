@@ -20,21 +20,6 @@ const SECTION_TITLE = {
   color: 'var(--color-text-muted)',
 };
 
-const inputShell = {
-  width: '100%',
-  padding: 'var(--space-2) var(--space-3)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-md)',
-  fontSize: 'var(--text-sm)',
-  background: 'var(--color-surface)',
-  color: 'var(--color-text)',
-};
-
-const formatMoney = (value) =>
-  `PKR ${(Number(value) || 0).toLocaleString('en-PK', {
-    minimumFractionDigits: 2,
-  })}`;
-
 const formatMoneyRounded = (value, mode = 'round') => {
   const num = Number(value) || 0;
   const abs = Math.abs(num);
@@ -104,8 +89,6 @@ export const TransactionForm = ({
     () => clampMoney(form.paymentReceived),
     [form.paymentReceived]
   );
-
-  const remaining = useMemo(() => balance - amountPaid, [balance, amountPaid]);
 
   const balanceRounded = useMemo(() => Math.floor(balance), [balance]);
   const amountPaidRounded = useMemo(() => Math.ceil(amountPaid), [amountPaid]);

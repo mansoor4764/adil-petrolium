@@ -5,37 +5,14 @@ import { Button } from '../../components/ui/Button';
 import { EmptyState }    from '../../components/ui/EmptyState';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { CustomerStatementGroups, buildCustomerStatementGroups, filterCustomerStatementGroups } from '../../components/admin/CustomerStatementGroups';
-import { SectionHeader, Section } from '../../components/ui/Section';
-import { formatCurrencyPK, formatDatePK, formatNumberPK, toInputDatePK, formatCurrencyShortPK } from '../../utils/pkFormat';
+import { SectionHeader } from '../../components/ui/Section';
+import { formatDatePK, formatNumberPK, toInputDatePK, formatCurrencyShortPK } from '../../utils/pkFormat';
 
 const fmt     = formatCurrencyShortPK;
 const fmtL    = (v) => `${formatNumberPK(v, 0, 0)} L`;
-const formatNumber = formatNumberPK;
 const fmtDate = formatDatePK;
-const PK_TIMEZONE = 'Asia/Karachi';
 
 const localToday = () => toInputDatePK(new Date());
-
-const formatBalance = (value) => formatCurrencyPK(Math.abs(Number(value) || 0));
-
-const StatusPill = ({ locked }) => (
-  <span style={{
-    fontSize: 'var(--text-xs)', fontWeight: 700, padding: '0.28rem 0.7rem',
-    borderRadius: 'var(--radius-full)',
-    background: locked
-      ? 'color-mix(in oklch, var(--color-success) 10%, var(--color-surface))'
-      : 'color-mix(in oklch, var(--color-warning) 10%, var(--color-surface))',
-    color:  locked ? 'var(--color-success)' : 'var(--color-warning)',
-    border: locked
-      ? '1px solid color-mix(in oklch, var(--color-success) 18%, transparent)'
-      : '1px solid color-mix(in oklch, var(--color-warning) 18%, transparent)',
-    letterSpacing: '0.05em',
-    textTransform: 'uppercase',
-    lineHeight: 1,
-  }}>
-    {locked ? '🔒 Locked' : '● Open'}
-  </span>
-);
 
 const SummaryCard = ({ label, value, hint, accent }) => (
   <div style={{
@@ -52,15 +29,6 @@ const SummaryCard = ({ label, value, hint, accent }) => (
     {hint ? <div style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', fontWeight: 500 }}>{hint}</div> : null}
   </div>
 );
-
-const formatLongDate = (value) =>
-  new Date(value).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: '2-digit',
-    year: 'numeric',
-    timeZone: PK_TIMEZONE,
-  });
 
 export default function DailyRecord() {
   const [selectedDate, setSelectedDate] = useState(localToday);
@@ -200,66 +168,12 @@ export default function DailyRecord() {
     } finally { setLockLoading(false); }
   };
 
-  const ledgerRows = useMemo(() => {
-    const ordered = [...dayTransactions].sort(
-      (a, b) => new Date(a.transactionDate) - new Date(b.transactionDate)
-    );
-
-    return ordered.map((tx) => ({
-      id: tx._id,
-      date: fmtDate(tx.transactionDate),
-      voucher: tx.referenceNo || tx.billNo || '—',
-      accountCode: tx.customerId?.customerCode || '—',
-      accountName: tx.customerId?.userId?.name || '—',
-      product: tx.fuelType
-        ? String(tx.fuelType).toUpperCase()
-        : String(tx.transactionType || '').replace(/_/g, ' ') || '—',
-      instNo: tx.referenceNo || tx.billNo || '—',
-      vehicle: tx.customerId?.vehicleInfo || '—',
-      qty: tx.fuelQuantity != null && tx.fuelQuantity !== ''
-        ? formatNumber(tx.fuelQuantity) : '—',
-      rate: tx.rate != null && tx.rate !== '' ? fmt(tx.rate) : '—',
-      debit:  tx.totalAmount > 0 ? fmt(tx.totalAmount) : '—',
-      credit: tx.paymentReceived > 0 ? fmt(tx.paymentReceived) : '—',
-      balance: formatBalance(tx.updatedBalance),
-      balanceValue: Number(tx.updatedBalance) || 0,
-      transactionType: tx.transactionType,
-      isVoided: Boolean(tx.isVoided),
-      _debit:  Number(tx.totalAmount) || 0,
-      _credit: Number(tx.paymentReceived) || 0,
-      _qty:    Number(tx.fuelQuantity) || 0,
-    }));
-  }, [dayTransactions]);
-
-  const openingBalance = ledgerRows.length
-    ? Number(ledgerRows[0].balanceValue || 0)
-      - Number(ledgerRows[0]._debit || 0)
-      + Number(ledgerRows[0]._credit || 0)
-    : 0;
-
-  const closingBalance = ledgerRows.length
-    ? Number(ledgerRows[ledgerRows.length - 1].balanceValue || 0)
-    : 0;
-
-  const productTotals = useMemo(
-    () => ledgerRows.reduce((acc, tx) => {
-      if (tx.product === 'PMG') acc.pmg += tx._qty;
-      if (tx.product === 'HSD') acc.hsd += tx._qty;
-      if (tx.product === 'NR')  acc.nr  += tx._qty;
-      return acc;
-    }, { pmg: 0, hsd: 0, nr: 0 }),
-    [ledgerRows]
-  );
-
-  const totalDebitTransactions  = ledgerRows.filter((tx) => tx._debit  > 0 && !tx.isVoided).length;
-  const totalCreditTransactions = ledgerRows.filter((tx) => tx._credit > 0 && !tx.isVoided).length;
   const loading = loadingSummary || loadingTransactions || loadingRecord;
   const statementGroups = useMemo(() => buildCustomerStatementGroups(dayTransactions), [dayTransactions]);
   const filteredStatementGroups = useMemo(
     () => filterCustomerStatementGroups(statementGroups, searchQuery),
     [statementGroups, searchQuery]
   );
-  const totalCustomers = statementGroups.length;
 
   return (
     <>

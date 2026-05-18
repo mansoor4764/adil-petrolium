@@ -1,34 +1,6 @@
-import React, { useEffect, useId, useState } from 'react';
-
-const MOBILE_BREAKPOINT = 880;
+import React, { useId, useState } from 'react';
 
 const isDateLikeType = (type) => type === 'date' || type === 'datetime-local';
-
-const formatDateLabel = (value, type) => {
-  if (!value) return '';
-
-  const date = type === 'date'
-    ? new Date(`${value}T00:00:00`)
-    : new Date(value);
-
-  if (Number.isNaN(date.getTime())) return value;
-
-  if (type === 'date') {
-    return new Intl.DateTimeFormat('en-PK', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(date);
-  }
-
-  return new Intl.DateTimeFormat('en-PK', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date);
-};
 
 export const Input = React.forwardRef(({
   label, error, hint, id, required, type = 'text', ...rest
@@ -36,29 +8,9 @@ export const Input = React.forwardRef(({
   const autoId = useId();
   const inputId = id || autoId;
   const [focused, setFocused] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   const dateLike = isDateLikeType(type);
   const active = focused;
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
-
-    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-    const update = () => setIsMobile(mediaQuery?.matches || false);
-
-    update();
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', update);
-      return () => mediaQuery.removeEventListener('change', update);
-    }
-
-    if (mediaQuery.addListener) {
-      mediaQuery.addListener(update);
-      return () => mediaQuery.removeListener(update);
-    }
-  }, []);
 
   const borderColor = error
     ? 'var(--color-error)'

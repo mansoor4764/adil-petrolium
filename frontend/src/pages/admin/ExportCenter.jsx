@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { exportDaily, exportMonthly, exportYearly } from '../../api/reportApi';
 import { toInputDatePK } from '../../utils/pkFormat';
-import { SectionHeader, Section } from '../../components/ui/Section';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
@@ -66,16 +65,6 @@ const FieldLabel = ({ children }) => (
     {children}
   </label>
 );
-
-const controlStyle = {
-  padding: 'var(--space-2) var(--space-3)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-md)',
-  fontSize: 'var(--text-sm)',
-  background: 'var(--color-surface)',
-  color: 'var(--color-text)',
-  minHeight: 40,
-};
 
 const ExportCard = ({
   title,

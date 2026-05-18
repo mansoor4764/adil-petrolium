@@ -1,29 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getTransactions } from '../../api/transactionApi';
 import { Button } from '../../components/ui/Button';
-import { EmptyState } from '../../components/ui/EmptyState';
 import { Select } from '../../components/ui/Select';
-import { SkeletonTable } from '../../components/ui/Skeleton';
 import { CustomerStatementGroups, buildCustomerStatementGroups, filterCustomerStatementGroups } from '../../components/admin/CustomerStatementGroups';
-import { SectionHeader, Section } from '../../components/ui/Section';
-import { formatCurrencyPK, formatDateTimePK, formatNumberPK, formatCurrencyShortPK } from '../../utils/pkFormat';
+import { formatNumberPK, formatCurrencyShortPK } from '../../utils/pkFormat';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const fmt = formatCurrencyShortPK;
 const fmtL = (v) => `${formatNumberPK(v, 0, 0)} L`;
-const fmtDT = formatDateTimePK;
-const formatNumber = formatNumberPK;
-
-const controlStyle = {
-  padding: 'var(--space-2) var(--space-3)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-md)',
-  fontSize: 'var(--text-sm)',
-  background: 'var(--color-surface)',
-  color: 'var(--color-text)',
-  minHeight: 40,
-};
 
 const SummaryCard = ({ label, value, hint, accent }) => (
   <div style={{

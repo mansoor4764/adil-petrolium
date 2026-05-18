@@ -1,4 +1,3 @@
-import { useContext } from 'react';
 import { useToastContext } from '../components/ui/ToastProvider';
 
 export const useToast = () => {

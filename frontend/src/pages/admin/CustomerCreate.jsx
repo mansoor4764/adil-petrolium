@@ -64,75 +64,6 @@ const InfoChip = ({ color, children }) => (
   </span>
 );
 
-const StatCard = ({ label, value, hint, accent, icon }) => (
-  <div
-    style={{
-      background: 'var(--color-surface)',
-      border: '1px solid var(--color-border)',
-      borderRadius: 'var(--radius-lg)',
-      padding: 'var(--space-5)',
-      boxShadow: 'var(--shadow-sm)',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 'var(--space-2)',
-    }}
-  >
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span
-        style={{
-          fontSize: 'var(--text-xs)',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.07em',
-          color: 'var(--color-text-muted)',
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          width: 30,
-          height: 30,
-          borderRadius: 'var(--radius-md)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: `color-mix(in oklch, ${accent} 12%, var(--color-surface))`,
-          color: accent,
-          fontSize: 14,
-        }}
-      >
-        {icon}
-      </span>
-    </div>
-
-    <div
-      style={{
-        fontSize: 'clamp(1.1rem, 1.8vw, 1.45rem)',
-        fontWeight: 700,
-        letterSpacing: '-0.03em',
-        lineHeight: 1.15,
-      }}
-    >
-      {value}
-    </div>
-
-    {hint ? (
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
-        {hint}
-      </div>
-    ) : null}
-
-    <div
-      style={{
-        height: 3,
-        borderRadius: 2,
-        background: `color-mix(in oklch, ${accent} 24%, transparent)`,
-      }}
-    />
-  </div>
-);
-
 const textareaStyle = {
   width: '100%',
   padding: 'var(--space-3)',
@@ -151,16 +82,8 @@ export default function CustomerCreate() {
   const toast = useToast();
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
   const [created, setCreated] = useState(null);
-
-  const dirty = useMemo(() => Object.values(form).some(Boolean), [form]);
-
-  const completedFields = useMemo(
-    () => Object.values(form).filter((value) => String(value).trim() !== '').length,
-    [form]
-  );
 
   const requiredComplete = useMemo(() => (
     Boolean(form.name.trim())
@@ -173,7 +96,6 @@ export default function CustomerCreate() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
     setValidationErrors({});
 
     try {
@@ -213,13 +135,11 @@ export default function CustomerCreate() {
         });
         setValidationErrors(fieldErrors);
         const msg = errData.message || 'Validation failed';
-        setError(msg);
         try {
           toast.error({ title: 'Submission Error', message: msg, duration: 7000 });
         } catch (e) {}
       } else {
         const msg = errData?.message || 'Failed to create customer';
-        setError(msg);
         try {
           toast.error({ title: 'Submission Error', message: msg, duration: 7000 });
         } catch (e) {}
