@@ -79,8 +79,9 @@ client.interceptors.request.use(
 client.interceptors.response.use(
   (res) => {
     // Store tokens from response if present (for mobile fallback)
-    if (res.data?.data?.tokens) {
-      setStoredTokens(res.data.data.tokens);
+    // Tokens are in _tokens field to avoid breaking existing response structure
+    if (res.data?.data?._tokens) {
+      setStoredTokens(res.data.data._tokens);
     }
     return res;
   },
@@ -131,9 +132,9 @@ client.interceptors.response.use(
       // Refresh the access token
       const refreshRes = await client.post('/auth/refresh', {}, refreshConfig);
       
-      // Store new tokens if returned
-      if (refreshRes.data?.data?.tokens) {
-        setStoredTokens(refreshRes.data.data.tokens);
+      // Store new tokens if returned (in _tokens field)
+      if (refreshRes.data?.data?._tokens) {
+        setStoredTokens(refreshRes.data.data._tokens);
       }
       
       processQueue();

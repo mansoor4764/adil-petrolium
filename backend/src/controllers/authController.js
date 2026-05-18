@@ -40,14 +40,16 @@ const login = async (req, res, next) => {
       path: '/api/v1/auth/',
     });
 
-    // ✅ Also return tokens in response body for mobile browsers that block third-party cookies
-    return sendSuccess(res, {
-      user: result.user,
-      tokens: {
+    // ✅ Return user in data field (backward compatible) and tokens in separate field for mobile
+    const responseData = {
+      ...result.user,
+      _tokens: {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
       },
-    }, 'Login successful');
+    };
+
+    return sendSuccess(res, responseData, 'Login successful');
   } catch (err) {
     next(err);
   }
@@ -87,9 +89,9 @@ const refresh = async (req, res, next) => {
       path: '/api/v1/auth/',
     });
 
-    // ✅ Also return tokens in response body for mobile browsers
+    // ✅ Return tokens in _tokens field for mobile browsers
     return sendSuccess(res, {
-      tokens: {
+      _tokens: {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
       },
