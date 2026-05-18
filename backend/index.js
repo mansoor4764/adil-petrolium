@@ -45,7 +45,35 @@ async function connectToDatabase() {
   }
 }
 
-// Security Headers
+// CORS Configuration - MUST be before other middleware
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = config.cors.allowedOrigins;
+    
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      console.log('Allowed origins:', allowedOrigins);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400, // 24 hours
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+
+// Security Headers (after CORS)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -56,17 +84,8 @@ app.use(helmet({
     },
   },
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
-
-// CORS - Allow your frontend
-app.use(cors({
-  origin: config.cors.allowedOrigins,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-app.options('*', cors());
 
 // Body Parsing
 app.use(compression({
@@ -96,6 +115,7 @@ app.get('/health', (req, res) => {
     status: 'ok',
     ts: new Date().toISOString(),
     db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    allowedOrigins: config.cors.allowedOrigins,
   });
 });
 
