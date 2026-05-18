@@ -12,7 +12,7 @@ const isProd = config.env === 'production';
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: isProd,
-  sameSite: isProd ? 'strict' : 'lax',
+  sameSite: isProd ? 'none' : 'lax', // Changed from 'strict' to 'none' for cross-origin
   path: '/',
 };
 
