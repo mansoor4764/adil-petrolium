@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+
+# Environment files (use Vercel dashboard for env vars)
+.env
+.env.local
+.env.*.local
+
+# Testing
+tests
+*.test.js
+.nyc_output
+coverage
+
+# Development
+nodemon.json
+
+# Documentation (optional - remove if you want docs deployed)
+*.md
+!README.md
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Misc
+cookiejar.txt
+test-output.txt
+npm-audit*.json
