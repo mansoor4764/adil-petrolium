@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { loginApi, logoutApi, getMeApi } from '../api/authApi';
-import { resetInterceptorState } from '../api/axiosClient';
+import { resetInterceptorState, clearStoredTokens } from '../api/axiosClient';
 
 // ─── Fetch Current User ───────────────────────────────────────
 export const fetchMe = createAsyncThunk(
@@ -44,6 +44,7 @@ export const logoutUser = createAsyncThunk(
       return rejectWithValue(err?.response?.data?.message || 'Logout failed');
     } finally {
       resetInterceptorState();
+      clearStoredTokens();
     }
   }
 );

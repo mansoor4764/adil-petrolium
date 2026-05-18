@@ -7,7 +7,16 @@ const logger   = require('../utils/logger');
 
 const authenticate = async (req, res, next) => {
   try {
-    const token = req.cookies?.accessToken;
+    // Try to get token from cookie first, then from Authorization header (for mobile fallback)
+    let token = req.cookies?.accessToken;
+    
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+    
     if (!token) throw new AppError('Authentication required', 401);
 
     let decoded;

@@ -8,6 +8,34 @@ const client = axios.create({
 
 export const API_BASE_URL = client.defaults.baseURL;
 
+// ─── Token Storage (fallback for mobile browsers that block cookies) ───
+const TOKEN_STORAGE_KEY = 'auth_tokens';
+
+const getStoredTokens = () => {
+  try {
+    const stored = localStorage.getItem(TOKEN_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+const setStoredTokens = (tokens) => {
+  try {
+    if (tokens) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(tokens));
+    } else {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+    }
+  } catch (err) {
+    console.error('Failed to store tokens:', err);
+  }
+};
+
+export const clearStoredTokens = () => {
+  setStoredTokens(null);
+};
+
 // ─── Refresh Token State ──────────────────────────────────────
 let isRefreshing = false;
 let failedQueue  = [];
@@ -36,8 +64,26 @@ const isAuthUrl = (url = '') =>
     url.includes('/auth/logout')
   );
 
+// ─── Request Interceptor (add Authorization header if tokens in localStorage) ───
+client.interceptors.request.use(
+  (config) => {
+    const tokens = getStoredTokens();
+    if (tokens?.accessToken && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${tokens.accessToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 client.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    // Store tokens from response if present (for mobile fallback)
+    if (res.data?.data?.tokens) {
+      setStoredTokens(res.data.data.tokens);
+    }
+    return res;
+  },
 
   async (error) => {
     const original = error.config || {};
@@ -71,13 +117,31 @@ client.interceptors.response.use(
     isRefreshing    = true;
 
     try {
+      // Get refresh token from localStorage if available
+      const tokens = getStoredTokens();
+      const refreshConfig = { _retry: true };
+      
+      // If we have a refresh token in localStorage, send it in Authorization header
+      if (tokens?.refreshToken) {
+        refreshConfig.headers = {
+          Authorization: `Bearer ${tokens.refreshToken}`,
+        };
+      }
+      
       // Refresh the access token
-      await client.post('/auth/refresh', {}, { _retry: true });
+      const refreshRes = await client.post('/auth/refresh', {}, refreshConfig);
+      
+      // Store new tokens if returned
+      if (refreshRes.data?.data?.tokens) {
+        setStoredTokens(refreshRes.data.data.tokens);
+      }
+      
       processQueue();
       return client(original);
     } catch (refreshErr) {
       processQueue(refreshErr);
       resetInterceptorState();
+      clearStoredTokens();
       if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
         window.location.replace('/login');
       }

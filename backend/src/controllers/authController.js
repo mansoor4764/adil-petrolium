@@ -40,7 +40,14 @@ const login = async (req, res, next) => {
       path: '/api/v1/auth/',
     });
 
-    return sendSuccess(res, result.user, 'Login successful');
+    // ✅ Also return tokens in response body for mobile browsers that block third-party cookies
+    return sendSuccess(res, {
+      user: result.user,
+      tokens: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      },
+    }, 'Login successful');
   } catch (err) {
     next(err);
   }
@@ -48,7 +55,16 @@ const login = async (req, res, next) => {
 
 const refresh = async (req, res, next) => {
   try {
-    const rawRefreshToken = req.cookies?.refreshToken;
+    // Try to get refresh token from cookie first, then from Authorization header (for mobile fallback)
+    let rawRefreshToken = req.cookies?.refreshToken;
+    
+    if (!rawRefreshToken) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        rawRefreshToken = authHeader.substring(7);
+      }
+    }
+    
     if (!rawRefreshToken) {
       return res.status(401).json({ success: false, message: 'No refresh token provided' });
     }
@@ -71,7 +87,13 @@ const refresh = async (req, res, next) => {
       path: '/api/v1/auth/',
     });
 
-    return sendSuccess(res, null, 'Token refreshed successfully');
+    // ✅ Also return tokens in response body for mobile browsers
+    return sendSuccess(res, {
+      tokens: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      },
+    }, 'Token refreshed successfully');
   } catch (err) {
     next(err);
   }
