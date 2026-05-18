@@ -161,19 +161,33 @@ export default function AdminLayout() {
               <span style={{ opacity: 0.7 }}>Admin</span>
             </div>
           )}
-          <button onClick={handleLogout} style={{
-            width: '100%',
-            padding: '10px 12px',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(255,255,255,0.06)',
-            color: 'var(--color-sidebar-text)',
-            fontSize: 'var(--text-xs)',
-            fontWeight: 600,
-            cursor: 'pointer',
-            border: 'none',
-            textAlign: (isMobile || collapsed) ? 'center' : 'left',
-          }}>
-            {(isMobile || collapsed) ? '↩' : '↩ Sign out'}
+          <button 
+            onClick={handleLogout} 
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-md)',
+              background: 'rgba(255,255,255,0.06)',
+              color: 'var(--color-sidebar-text)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+              cursor: 'pointer',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: isMobile ? 'flex-start' : (collapsed ? 'center' : 'flex-start'),
+              gap: '8px',
+              transition: 'background 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+            }}
+          >
+            <span style={{ fontSize: '16px', lineHeight: 1 }}>↩</span>
+            {(isMobile || !collapsed) && <span>Sign out</span>}
           </button>
         </div>
       </aside>
