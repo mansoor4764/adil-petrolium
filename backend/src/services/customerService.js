@@ -4,6 +4,7 @@ const CustomerProfile = require('../models/CustomerProfile');
 const { createAuditLog } = require('./auditService');
 const AppError = require('../utils/AppError');
 const config   = require('../config');
+const cache = require('../utils/cache');
 
 const createCustomer = async ({ name, email, password, customerCode, phone, address, creditLimit, notes, createdBy, requestId }) => {
   const existing = await User.findOne({ email });
@@ -38,55 +39,69 @@ const createCustomer = async ({ name, email, password, customerCode, phone, addr
     requestId,
   });
 
+  // Invalidate customer list cache
+  cache.clear();
+
   return { user, profile };
 };
 
 const getCustomers = async ({ page = 1, limit = 20, search, isActive, sort = '-createdAt', requestingUser = null }) => {
-  const query = {};
-  if (isActive !== undefined) query.isActive = isActive === 'true' || isActive === true;
+  // Create cache key based on query parameters
+  const cacheKey = `customers:${requestingUser?._id || 'all'}:${page}:${limit}:${search || ''}:${isActive}:${sort}`;
+  
+  // Try to get from cache (30 second TTL for customer list)
+  return cache.wrap(cacheKey, async () => {
+    const query = {};
+    if (isActive !== undefined) query.isActive = isActive === 'true' || isActive === true;
 
-  // If an admin is requesting, restrict to customers created by that admin
-  if (requestingUser && requestingUser.role === 'admin') {
-    query.createdBy = requestingUser._id;
-  }
+    // If an admin is requesting, restrict to customers created by that admin
+    if (requestingUser && requestingUser.role === 'admin') {
+      query.createdBy = requestingUser._id;
+    }
 
-  let profileQuery = CustomerProfile.find(query)
-    .populate({ path: 'userId', select: 'name email' })
-    .sort(sort)
-    .skip((parseInt(page) - 1) * parseInt(limit))
-    .limit(parseInt(limit));
+    // Optimize search: if searching, do it more efficiently
+    if (search) {
+      // First, find matching users by name/email
+      const users = await User.find({
+        $or: [
+          { name:  { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+        ],
+      }).select('_id').lean();
+      
+      const userIds = users.map(u => u._id);
+      
+      // Combine with customerCode search
+      query.$or = [
+        { userId: { $in: userIds } },
+        { customerCode: { $regex: search, $options: 'i' } },
+      ];
+    }
 
-  if (search) {
-    // Search by code or name — requires populating first then filtering
-    // For production: use MongoDB Atlas Search or a compound index
-    const users = await User.find({
-      $or: [
-        { name:  { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-      ],
-    }).select('_id');
-    const userIds = users.map(u => u._id);
-    query.$or = [
-      { userId: { $in: userIds } },
-      { customerCode: { $regex: search, $options: 'i' } },
-    ];
-    profileQuery = CustomerProfile.find(query)
-      .populate({ path: 'userId', select: 'name email' })
+    // Use lean() for better performance and select only needed fields initially
+    const profileQuery = CustomerProfile.find(query)
+      .populate({ path: 'userId', select: 'name email', options: { lean: true } })
       .sort(sort)
       .skip((parseInt(page) - 1) * parseInt(limit))
-      .limit(parseInt(limit));
-  }
+      .limit(parseInt(limit))
+      .lean();
 
-  const [customers, total] = await Promise.all([
-    profileQuery.lean(),
-    CustomerProfile.countDocuments(query),
-  ]);
+    // Run queries in parallel for better performance
+    const [customers, total] = await Promise.all([
+      profileQuery,
+      CustomerProfile.countDocuments(query),
+    ]);
 
-  return {
-    customers,
-    meta: { total, page: parseInt(page), limit: parseInt(limit),
-      totalPages: Math.ceil(total / parseInt(limit)) },
-  };
+    return {
+      customers,
+      meta: { 
+        total, 
+        page: parseInt(page), 
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit)) 
+      },
+    };
+  }, 30000); // 30 second cache
 };
 
 const updateCustomer = async ({ profileId, updates, updatedBy, requestId }) => {
@@ -116,6 +131,9 @@ const updateCustomer = async ({ profileId, updates, updatedBy, requestId }) => {
     target: profileId, targetModel: 'CustomerProfile',
     details: sanitized, requestId,
   });
+
+  // Invalidate customer list cache
+  cache.clear();
 
   return profile;
 };

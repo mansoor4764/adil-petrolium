@@ -8,6 +8,14 @@ const connectDB = async () => {
     await mongoose.connect(config.mongo.uri, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      // Connection pooling for better performance
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      // Faster connection establishment
+      connectTimeoutMS: 10000,
+      // Keep connections alive
+      keepAlive: true,
+      keepAliveInitialDelay: 300000,
     });
     logger.info({ uri: config.mongo.uri.replace(/:\/\/.*@/, '://***@') }, 'MongoDB connected');
 
